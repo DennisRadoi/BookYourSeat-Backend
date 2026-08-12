@@ -32,7 +32,7 @@ public class Booking {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "recurring_booking_id")
-    private Recurring_Booking recurringBooking;
+    private RecurringBooking recurringBooking;
 
     @Column(name = "start_time", nullable = false)
     private LocalTime startTime;
