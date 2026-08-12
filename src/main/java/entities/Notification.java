@@ -1,0 +1,38 @@
+package entities;
+
+import jakarta.persistence.*;
+import lombok.*;
+
+import java.time.OffsetDateTime;
+
+@Entity
+@Table(name = "NOTIFICATION")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+
+public class Notification {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
+
+    @Column(name = "user_id", nullable = false)
+    private Integer userId;
+
+    @Column(name = "message", nullable = false)
+    private String message;
+
+    @Column(name = "type", length = 50)
+    private String type;
+
+    @Column(name = "created_at", nullable = false, updatable = false, insertable = false)
+    private OffsetDateTime createdAt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "booking_id")
+    private Booking booking;
+
+
+}
