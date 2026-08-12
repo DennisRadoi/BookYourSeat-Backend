@@ -48,6 +48,6 @@ public class User {
     private Department department;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "adress_id", nullable = false)
-    private Adress adress;
+    @JoinColumn(name = "address_id", nullable = false)
+    private Address adress;
 }
