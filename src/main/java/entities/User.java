@@ -17,31 +17,34 @@ public class User {
     private Integer id;
 
     @Column(name = "first_name", nullable = false)
-    private String first_name;
+    private String firstName;
 
     @Column(name = "last_name", nullable = false)
-    private String last_name;
+    private String lastName;
 
     @Column(name = "email", nullable = false)
     private String email;
 
     @Column(name = "phone_number", nullable = false, length = 10)
-    private String phone_number;
+    private String phoneNumber;
 
-    @Column(name = "phone_number", nullable = false)
-    private String profile_photo;
+    @Column(name = "profile_photo", nullable = false)
+    private String profilePhoto;
 
     @Column(name = "password_hash", nullable = false)
-    private String password_hash;
+    private String passwordHash;
+
+    @Column(name = "role", nullable = false)
+    private String role;
 
     @Column(name = "is_active", nullable = false)
-    private Boolean is_active;
+    private Boolean isActive;
 
     @Column(name = "employment_date", nullable = false)
-    private LocalDate employment_date;
+    private LocalDate employmentDate;
 
     @Column(name = "created_at", nullable = false, updatable = false, insertable = false)
-    private OffsetDateTime created_at;
+    private OffsetDateTime createdAt;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "department_id", nullable = false)

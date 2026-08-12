@@ -32,11 +32,11 @@ public class OfficeInvitation {
     private String message;
 
     @Column(name = "created_at", nullable = false, updatable = false, insertable = false)
-    private OffsetDateTime created_at;
+    private OffsetDateTime createdat;
 
     @Column(name = "answered_at")
-    private OffsetDateTime answered_at;
+    private OffsetDateTime answeredAt;
 
     @Column(name = "proposed_date", nullable = false)
-    private LocalDate proposed_date;
+    private LocalDate proposedDate;
 }

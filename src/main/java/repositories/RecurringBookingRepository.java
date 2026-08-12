@@ -1,4 +1,4 @@
-package repository;
+package repositories;
 
 import entities.RecurringBooking;
 import org.springframework.data.jpa.repository.JpaRepository;
