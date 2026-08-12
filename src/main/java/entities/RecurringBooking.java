@@ -10,7 +10,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 
-public class Recurring_Booking {
+public class RecurringBooking {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
