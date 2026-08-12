@@ -24,26 +24,26 @@ public class UserPreferences {
     private User user;
 
     @Column(name = "preferred_floor")
-    String prefered_floor;
+    String preferedFloor;
 
     @Column(name = "preferred_start_time")
-    LocalTime preferred_start_time;
+    LocalTime preferredStartTime;
 
     @Column(name = "preferred_end_time")
-    LocalTime preferred_end_time;
+    LocalTime preferredEndTime;
 
     @Column(name = "recieves_notifications_on_email", nullable = false)
-    Boolean recievies_notif_on_email;
+    Boolean recieviesNotifOnEmail;
 
     @Column(name = "preferred_building")
-    String prefreed_building;
+    String prefreedBuilding;
 
     @Column(name = "near_window", nullable = false)
-    Boolean near_window;
+    Boolean nearWindow;
 
     @Column(name = "quiet_place", nullable = false)
-    Boolean quiet_place;
+    Boolean quietPlace;
 
     @Column(name = "days_of_week")
-    String days_of_week;
+    String daysOfWeek;
 }
