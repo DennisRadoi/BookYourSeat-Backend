@@ -32,7 +32,7 @@ public class OfficeInvitation {
     private String message;
 
     @Column(name = "created_at", nullable = false, updatable = false, insertable = false)
-    private OffsetDateTime createdat;
+    private OffsetDateTime createdAt;
 
     @Column(name = "answered_at")
     private OffsetDateTime answeredAt;
