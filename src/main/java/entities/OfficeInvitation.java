@@ -10,7 +10,7 @@ import java.time.LocalDate;
 import java.time.OffsetDateTime;
 
 @Entity
-@Table(name = "OFFICE_INVITATION")
+@Table(name = "office_invitation")
 @Getter
 @Setter
 @AllArgsConstructor

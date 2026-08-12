@@ -13,7 +13,6 @@ import java.time.OffsetDateTime;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-
 public class Booking {
 
     @Id
@@ -30,8 +29,7 @@ public class Booking {
     @JoinColumn(name = "seat_id")
     private Seat seat;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "recurring_booking_id")
+    @OneToOne(mappedBy = "booking", cascade = CascadeType.ALL)
     private RecurringBooking recurringBooking;
 
     @Column(name = "start_time", nullable = false)

@@ -13,8 +13,12 @@ import lombok.*;
 public class RecurringBooking {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @MapsId
+    @JoinColumn(name = "id")
+    private Booking booking;
 
     @Column(name = "frequency", length = 50)
     private String frequency;

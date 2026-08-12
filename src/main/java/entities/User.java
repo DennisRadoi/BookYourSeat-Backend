@@ -6,7 +6,7 @@ import lombok.*;
 import java.time.*;
 
 @Entity
-@Table(name = "USERS")
+@Table(name = "users")
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
