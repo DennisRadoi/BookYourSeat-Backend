@@ -1,0 +1,42 @@
+package entities;
+
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
+
+@Entity
+@Table(name = "OFFICE_INVITATION")
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+public class OfficeInvitation {
+    @Id()
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "addressee_id", nullable = false)
+    private User addressee;
+
+    @Column(name = "message", nullable = false)
+    private String message;
+
+    @Column(name = "created_at", nullable = false, updatable = false, insertable = false)
+    private OffsetDateTime created_at;
+
+    @Column(name = "answered_at")
+    private OffsetDateTime answered_at;
+
+    @Column(name = "proposed_date", nullable = false)
+    private LocalDate proposed_date;
+}
