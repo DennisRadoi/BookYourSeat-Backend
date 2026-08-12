@@ -23,8 +23,9 @@ public class Room {
     @Column(nullable = false)
     private String name;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String type;
+    private RoomType type;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "building_id")
@@ -32,4 +33,9 @@ public class Room {
 
     @OneToMany(mappedBy = "seat")
     private List<Seat> seats;
+}
+
+enum RoomType {
+    de_oficiu,
+    de_conferinta
 }

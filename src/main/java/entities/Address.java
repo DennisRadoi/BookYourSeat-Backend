@@ -20,6 +20,7 @@ public class Address {
     @Column(nullable = false)
     private String number;
 
+    @Column(name = "floor")
     private Integer floor;
 
     @Column(name = "apartment_block")
@@ -28,10 +29,16 @@ public class Address {
     @Column(name = "postal_code", nullable = false)
     private String postalCode;
 
-    @Column(nullable = false)
-    private String type;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "type", nullable = false)
+    private AddressType type;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name =  "locality_id")
     private Locality locality;
+}
+
+enum AddressType {
+    de_domiciliu,
+    de_oficiu;
 }

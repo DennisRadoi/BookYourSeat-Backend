@@ -22,8 +22,9 @@ public class Seat {
     @Column(name = "status", length = 50)
     private String status;
 
-    @Column(name = "type", length = 50)
-    private String type;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "type")
+    private SeatType type;
 
     @Column(name = "x_position")
     private Integer xPosition;
@@ -42,4 +43,9 @@ public class Seat {
 
     @Column(name = "has_standup_desk")
     private Boolean hasStandupDesk;
+}
+
+enum SeatType {
+    rezervabil,
+    nu_este_rezervabil
 }
