@@ -16,7 +16,7 @@ public class Utils {
 
         User colleague = list.get(index);
 
-        return colleague.getFirstName() + " " + colleague.getLastName();
+        return colleague.getFirstName() + " " + colleague.getLastName().charAt(0) + ".";
     }
 
     public static boolean isActiveBookingNow(LocalDate today, LocalTime now, Booking booking) {

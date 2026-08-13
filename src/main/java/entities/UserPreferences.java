@@ -32,8 +32,11 @@ public class UserPreferences {
     @Column(name = "preferred_end_time")
     LocalTime preferredEndTime;
 
-    @Column(name = "recieves_notifications_on_email", nullable = false)
-    Boolean recieviesNotifOnEmail;
+    @Column(name = "booking_confirmation_on_email", nullable = false)
+    Boolean bookingConfirmationOnEmail;
+
+    @Column(name = "reminder_before_booking", nullable = false)
+    Boolean reminderBeforeBooking;
 
     @Column(name = "preferred_building")
     String prefreedBuilding;

@@ -16,10 +16,10 @@ public record ColleagueProfileResponse(
         String daysOfWeek,
         String location,
         boolean isFavorite,
-        List<BookingDto> bookingDto
+        List<BookingDTOV2> bookingDto
 ) {
     public static ColleagueProfileResponse fromEntity(User user, String preferedColleague, boolean isFavorite,
-                      List<BookingDto> list, String location) {
+                      List<BookingDTOV2> list, String location) {
         UserPreferences preferinte = user.getUserPreferences();
         return new ColleagueProfileResponse(
                 user.getFirstName() + " " + user.getLastName(),

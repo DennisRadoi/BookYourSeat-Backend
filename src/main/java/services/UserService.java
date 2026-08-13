@@ -1,5 +1,6 @@
 package services;
 
+import dto.BookingDTOV2;
 import dto.ColleagueProfileResponse;
 import dto.ColleagueResponse;
 import dto.MyAccountResponse;
@@ -135,14 +136,51 @@ public class UserService {
         }
     }
 
-        public ColleagueProfileResponse toColleagueProfileResponse(Integer userId, User colleague) {
-            List<User> listOfFavorites = favoriteColleagueRepository.findFavoriteUsersByUserId(userId);
-            boolean isFavorite = listOfFavorites.contains(colleague);
-            LocalDate threeWeeksAgo = LocalDate.now().minusWeeks(3);
-            List<Booking> bookings = bookingRepository
-                    .findByUserIdAndEndDateGreaterThanEqual(colleague.getId(), threeWeeksAgo);
+    public ColleagueProfileResponse toColleagueProfileResponse(Integer userId, User colleague) {
+        List<User> listOfFavorites = favoriteColleagueRepository.findFavoriteUsersByUserId(userId);
+        boolean isFavorite = listOfFavorites.contains(colleague);
 
-//            return;
+        List<User> listOfFavoritesOfColleague = favoriteColleagueRepository
+                .findFavoriteUsersByUserId(colleague.getId());
+        String favorit = listOfFavoritesOfColleague
+                .isEmpty() ? null : Utils.getRandomFavoriteColleage(listOfFavoritesOfColleague);
+
+        LocalDate threeWeeksAgo = LocalDate.now().minusWeeks(3);
+        List<BookingDTOV2> bookings = bookingRepository
+                .findByUserIdAndEndDateGreaterThanEqual(colleague.getId(), threeWeeksAgo)
+                .stream()
+                .map(b -> BookingDTOV2.fromEntity(b))
+                .toList();
+
+        String location = null;
+        if (!colleague.getIsActive()) {
+            location = new String("inactiv");
         }
+
+        Booking activeBooking = bookingRepository.findByUserIdAndStatus(
+                        colleague.getId(), BookingStatus.CONFIRMATA
+                ).stream()
+                .filter(b -> Utils.isActiveBookingNow(
+                        LocalDate.now(), LocalTime.now(), b))
+                .findFirst()
+                .orElse(null);
+
+        if (activeBooking == null) {
+            location = new String("remote");
+        }
+
+        if (activeBooking.getSeat() == null) {
+            location = String.valueOf(activeBooking.getRoom().getFloor());
+        } else {
+            location = String.valueOf(activeBooking.getSeat().getRoom().getFloor());
+        }
+
+        return ColleagueProfileResponse.fromEntity(
+                colleague,
+                favorit,
+                isFavorite,
+                bookings,
+                location
+        );
     }
 }
