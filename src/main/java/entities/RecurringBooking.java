@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "RECURRING_BOOKING")
+@Table(name = "recurring_booking")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -26,6 +26,6 @@ public class RecurringBooking {
     @Column(name = "days_of_week", length = 100)
     private String daysOfWeek;
 
-    @Column(name = "interval_of_reccur", length = 50)
-    private String intervalOfReccur;
+    @Column(name = "interval_of_recurrence", length = 50)
+    private Integer intervalOfRecurrence;
 }

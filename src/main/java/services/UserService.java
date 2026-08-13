@@ -1,17 +1,34 @@
 package services;
 
+import dto.ColleagueProfileResponse;
+import dto.ColleagueResponse;
+import dto.MyAccountResponse;
+import entities.Address;
+import entities.Booking;
+import entities.FavoriteColleague;
 import entities.User;
+import entities.enums.BookingStatus;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import repositories.BookingRepository;
+import repositories.FavoriteColleagueRepository;
 import repositories.UserRepository;
+import utils.Utils;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 @Service
 @RequiredArgsConstructor
 public class UserService {
 
     private final UserRepository userRepository;
+    private final FavoriteColleagueRepository favoriteColleagueRepository;
+    private final BookingRepository bookingRepository;
 
     public User findById(Integer id) {
         return userRepository.findById(id)
@@ -63,5 +80,69 @@ public class UserService {
 
     public List<User> findAllByDepartmentName(String name) {
         return userRepository.findALlByDepartmentName(name);
+    }
+
+    public MyAccountResponse getMyAccountResponse(Integer userId) {
+        User user = findById(userId);
+
+        List<User> favoriti = favoriteColleagueRepository.findFavoriteUsersByUserId(userId);
+
+        String favorit = favoriti.isEmpty() ? null : Utils.getRandomFavoriteColleage(favoriti);
+
+        return MyAccountResponse.fromEntity(user, favorit);
+    }
+
+    public List<ColleagueResponse> getColleagues(Integer userId) {
+        return userRepository.findAll()
+                .stream()
+                .filter(u -> !u.getId().equals(userId))
+                .map(u -> toColleagueResponse(userId, u))
+                .toList();
+    }
+
+    public ColleagueResponse toColleagueResponse(Integer userId, User colleague) {
+        List<User> listOfFavorites = favoriteColleagueRepository.findFavoriteUsersByUserId(userId);
+        boolean isFavorite = listOfFavorites.contains(colleague);
+
+        User currentUser = findById(userId);
+        if (!currentUser.getIsActive()) {
+            return ColleagueResponse.fromEntity(colleague, "inactiv",
+                    null, isFavorite);
+        }
+
+        Booking activeBooking = bookingRepository.findByUserIdAndStatus(
+                        colleague.getId(), BookingStatus.CONFIRMATA
+                ).stream()
+                .filter(b -> Utils.isActiveBookingNow(
+                        LocalDate.now(), LocalTime.now(), b))
+                .findFirst()
+                .orElse(null);
+
+        if (activeBooking == null) {
+            return ColleagueResponse.fromEntity(
+                    colleague, "remote", null, isFavorite
+            );
+        }
+
+        if (activeBooking.getSeat() == null) {
+            return ColleagueResponse.fromEntity(
+                    colleague, "la birou", String.valueOf(activeBooking.getRoom().getFloor()), isFavorite
+            );
+        } else {
+            return ColleagueResponse.fromEntity(
+                    colleague, "la birou", String.valueOf(activeBooking.getSeat().getRoom().getFloor()), isFavorite
+            );
+        }
+    }
+
+        public ColleagueProfileResponse toColleagueProfileResponse(Integer userId, User colleague) {
+            List<User> listOfFavorites = favoriteColleagueRepository.findFavoriteUsersByUserId(userId);
+            boolean isFavorite = listOfFavorites.contains(colleague);
+            LocalDate threeWeeksAgo = LocalDate.now().minusWeeks(3);
+            List<Booking> bookings = bookingRepository
+                    .findByUserIdAndEndDateGreaterThanEqual(colleague.getId(), threeWeeksAgo);
+
+//            return;
+        }
     }
 }

@@ -6,7 +6,7 @@ import lombok.*;
 import java.time.OffsetDateTime;
 
 @Entity
-@Table(name = "NOTIFICATION")
+@Table(name = "notification")
 @Getter
 @Setter
 @NoArgsConstructor
