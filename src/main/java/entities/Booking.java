@@ -6,9 +6,10 @@ import lombok.*;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
+import entities.enums.BookingStatus;
 
 @Entity
-@Table(name = "BOOKING")
+@Table(name = "booking")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -19,11 +20,13 @@ public class Booking {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name = "user_id", nullable = false)
-    private Integer userId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
-    @Column(name = "room_id", nullable = false)
-    private Integer roomId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "room_id")
+    private Room room;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "seat_id")
@@ -32,6 +35,12 @@ public class Booking {
     @OneToOne(mappedBy = "booking", cascade = CascadeType.ALL)
     // when an operation is performed on parent entity the child also gets it
     private RecurringBooking recurringBooking;
+
+    @Column(name = "start_date", nullable = false)
+    private LocalDate startDate;
+
+    @Column(name = "end_date", nullable = false)
+    private LocalDate endDate;
 
     @Column(name = "start_time", nullable = false)
     private LocalTime startTime;
@@ -49,12 +58,6 @@ public class Booking {
     @Column(name = "updated_at")
     private OffsetDateTime updatedAt;
 
-    @Column(name = "date", nullable = false)
-    private LocalDate date;
-
-    @Column(name = "end_date")
-    private LocalDate endDate;
-
     @PreUpdate
     protected void onUpdate() {
         this.updatedAt = OffsetDateTime.now();
@@ -62,11 +65,4 @@ public class Booking {
 
     @PrePersist
     protected void onInsert() { this.status = BookingStatus.in_asteptare;}
-}
-
-public enum BookingStatus {
-    in_asteptare,
-    finalizata,
-    anulata,
-    confirmata,
 }

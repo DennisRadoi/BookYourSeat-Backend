@@ -2,9 +2,10 @@ package entities;
 
 import jakarta.persistence.*;
 import lombok.*;
+import entities.enums.SeatType;
 
 @Entity
-@Table(name = "SEAT")
+@Table(name = "seat")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -16,8 +17,9 @@ public class Seat {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name = "room_id", nullable = false)
-    private Integer roomId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "room_id", nullable = false)
+    Room room;
 
     @Column(name = "status", length = 50)
     private String status;

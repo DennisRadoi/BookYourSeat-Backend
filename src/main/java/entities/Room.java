@@ -36,7 +36,3 @@ public class Room {
     private List<Seat> seats;
 }
 
-enum RoomType {
-    de_oficiu,
-    de_conferinta
-}

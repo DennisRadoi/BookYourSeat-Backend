@@ -35,9 +35,11 @@ CREATE TABLE IF NOT EXISTS USERS(
                                     first_name VARCHAR(255) NOT NULL,
                                     email VARCHAR(255) NOT NULL UNIQUE,
                                     department_id INT REFERENCES DEPARTMENT(id),
+                                    role VARCHAR(255) NOT NULL,
                                     phone_number CHAR(10) NOT NULL UNIQUE,
                                     address_id INT REFERENCES ADDRESS(id),
                                     profile_photo VARCHAR(255),
+                                    employment_date DATE,
                                     is_active BOOLEAN DEFAULT TRUE,
                                     password_hash VARCHAR(255) NOT NULL,
                                     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
@@ -63,16 +65,16 @@ CREATE TABLE IF NOT EXISTS OFFICE_INVITATION(
 );
 
 CREATE TABLE IF NOT EXISTS USER_PREFERENCES(
-                                               id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-                                               user_id INT REFERENCES USERS(id),
+                    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+                    user_id INT REFERENCES USERS(id),
                                                preferred_floor VARCHAR(255),
                                                preferred_seat_type VARCHAR(255),
                                                preferred_start_time TIME,
-                                               prefered_end_time TIME,
-                                               recieves_notification BOOLEAN DEFAULT TRUE,
-                                               preferred_bulding VARCHAR(255),
+                                               preferred_end_time TIME,
+                                               recieves_notification_on_email BOOLEAN DEFAULT TRUE,
+                                               preferred_building VARCHAR(255),
                                                near_window BOOLEAN NOT NULL,
-                                               quiet_places BOOLEAN NOT NULL,
+                                               quiet_place BOOLEAN NOT NULL,
                                                days_of_week VARCHAR(255)
 );
 
@@ -113,7 +115,6 @@ CREATE TABLE IF NOT EXISTS BOOKING(
                                       user_id INT NOT NULL REFERENCES USERS(id),
                                       room_id INT REFERENCES ROOM(id),
                                       seat_id INT REFERENCES SEAT(id),
-                                      date_of_booking TIMESTAMPTZ, -- mai ma gandesc aici,
                                       start_time TIME NOT NULL,
                                       end_time TIME NOT NULL,
                                       status VARCHAR(255) NOT NULL CHECK(
@@ -121,6 +122,8 @@ CREATE TABLE IF NOT EXISTS BOOKING(
                                           ),
                                       created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
                                       updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+                                      start_date DATE NOT NULL,
+                                      end_date DATE NOT NULL,
                                       CONSTRAINT chk_booking CHECK(
                                           (room_id IS NULL AND seat_id IS NOT NULL)
                                               OR
@@ -133,14 +136,9 @@ CREATE TABLE IF NOT EXISTS BOOKING(
 
 CREATE TABLE IF NOT EXISTS RECURRING_BOOKING(
                                                 id INT PRIMARY KEY REFERENCES BOOKING(id),
-                                                start_date DATE NOT NULL,
-                                                end_date DATE NOT NULL,
                                                 frequency VARCHAR(255) NOT NULL,
                                                 days_of_week VARCHAR(16) NOT NULL,
-                                                interval_of_recurrence VARCHAR(255) NOT NULL,
-                                                CONSTRAINT chk_rec_booking CHECK(
-                                                    start_date < end_date
-                                                    )
+                                                interval_of_recurrence INT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS NOTIFICATION(
