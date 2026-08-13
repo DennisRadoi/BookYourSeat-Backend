@@ -35,9 +35,11 @@ CREATE TABLE IF NOT EXISTS USERS(
                                     first_name VARCHAR(255) NOT NULL,
                                     email VARCHAR(255) NOT NULL UNIQUE,
                                     department_id INT REFERENCES DEPARTMENT(id),
+                                    role VARCHAR(255) NOT NULL,
                                     phone_number CHAR(10) NOT NULL UNIQUE,
                                     address_id INT REFERENCES ADDRESS(id),
                                     profile_photo VARCHAR(255),
+                                    employment_date DATE,
                                     is_active BOOLEAN DEFAULT TRUE,
                                     password_hash VARCHAR(255) NOT NULL,
                                     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
@@ -63,16 +65,16 @@ CREATE TABLE IF NOT EXISTS OFFICE_INVITATION(
 );
 
 CREATE TABLE IF NOT EXISTS USER_PREFERENCES(
-                                               id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-                                               user_id INT REFERENCES USERS(id),
+                    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+                    user_id INT REFERENCES USERS(id),
                                                preferred_floor VARCHAR(255),
                                                preferred_seat_type VARCHAR(255),
                                                preferred_start_time TIME,
-                                               prefered_end_time TIME,
-                                               recieves_notification BOOLEAN DEFAULT TRUE,
-                                               preferred_bulding VARCHAR(255),
+                                               preferred_end_time TIME,
+                                               recieves_notification_on_email BOOLEAN DEFAULT TRUE,
+                                               preferred_building VARCHAR(255),
                                                near_window BOOLEAN NOT NULL,
-                                               quiet_places BOOLEAN NOT NULL,
+                                               quiet_place BOOLEAN NOT NULL,
                                                days_of_week VARCHAR(255)
 );
 

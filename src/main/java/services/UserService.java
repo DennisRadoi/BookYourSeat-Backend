@@ -1,17 +1,23 @@
 package services;
 
+import dto.MyAccountResponse;
+import entities.Address;
+import entities.FavoriteColleague;
 import entities.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import repositories.FavoriteColleagueRepository;
 import repositories.UserRepository;
 
 import java.util.List;
+import java.util.Random;
 
 @Service
 @RequiredArgsConstructor
 public class UserService {
 
     private final UserRepository userRepository;
+    private final FavoriteColleagueRepository favoriteColleagueRepository;
 
     public User findById(Integer id) {
         return userRepository.findById(id)
@@ -64,4 +70,23 @@ public class UserService {
     public List<User> findAllByDepartmentName(String name) {
         return userRepository.findALlByDepartmentName(name);
     }
+
+    public MyAccountResponse getMyAccountResponse(Integer userId) {
+        User user = findById(userId);
+
+        List<User> favoriti = favoriteColleagueRepository.findFavoriteUsersByUserId(userId);
+
+        String favorit = favoriti.isEmpty() ? null : GetRandomFavoriteColleage(favoriti);
+
+        return MyAccountResponse.fromEntity(user, favorit);
+    }
+
+    private static String GetRandomFavoriteColleage(List<User> lista) {
+        int index = new Random().nextInt(lista.size());
+
+        User coleg = lista.get(index);
+
+        return coleg.getFirstName() + " " + coleg.getLastName();
+    }
+
 }
