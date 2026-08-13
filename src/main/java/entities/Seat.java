@@ -2,6 +2,7 @@ package entities;
 
 import jakarta.persistence.*;
 import lombok.*;
+import entities.enums.SeatType;
 
 @Entity
 @Table(name = "seat")
@@ -44,9 +45,4 @@ public class Seat {
 
     @Column(name = "has_standup_desk")
     private Boolean hasStandupDesk;
-}
-
-enum SeatType {
-    rezervabil,
-    nu_este_rezervabil
 }

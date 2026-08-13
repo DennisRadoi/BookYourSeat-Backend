@@ -1,5 +1,6 @@
 package services;
 
+import dto.ColleagueProfileResponse;
 import dto.ColleagueResponse;
 import dto.MyAccountResponse;
 import entities.Address;
@@ -17,6 +18,7 @@ import utils.Utils;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
@@ -90,39 +92,57 @@ public class UserService {
         return MyAccountResponse.fromEntity(user, favorit);
     }
 
+    public List<ColleagueResponse> getColleagues(Integer userId) {
+        return userRepository.findAll()
+                .stream()
+                .filter(u -> !u.getId().equals(userId))
+                .map(u -> toColleagueResponse(userId, u))
+                .toList();
+    }
+
     public ColleagueResponse toColleagueResponse(Integer userId, User colleague) {
         List<User> listOfFavorites = favoriteColleagueRepository.findFavoriteUsersByUserId(userId);
         boolean isFavorite = listOfFavorites.contains(colleague);
 
         User currentUser = findById(userId);
         if (!currentUser.getIsActive()) {
-            return ColleagueResponse.fromEntity(currentUser, "inactiv",
+            return ColleagueResponse.fromEntity(colleague, "inactiv",
                     null, isFavorite);
         }
 
         Booking activeBooking = bookingRepository.findByUserIdAndStatus(
-                userId, BookingStatus.confirmata
-        ).stream()
+                        colleague.getId(), BookingStatus.CONFIRMATA
+                ).stream()
                 .filter(b -> Utils.isActiveBookingNow(
-                LocalDate.now(), LocalTime.now(), b))
+                        LocalDate.now(), LocalTime.now(), b))
                 .findFirst()
                 .orElse(null);
 
         if (activeBooking == null) {
             return ColleagueResponse.fromEntity(
-                    currentUser, "remote", "remote", isFavorite
+                    colleague, "remote", null, isFavorite
             );
         }
 
         if (activeBooking.getSeat() == null) {
             return ColleagueResponse.fromEntity(
-                    currentUser, "la birou", String.valueOf(activeBooking.getRoom().getFloor()), isFavorite
+                    colleague, "la birou", String.valueOf(activeBooking.getRoom().getFloor()), isFavorite
+            );
+        } else {
+            return ColleagueResponse.fromEntity(
+                    colleague, "la birou", String.valueOf(activeBooking.getSeat().getRoom().getFloor()), isFavorite
             );
         }
-        else {
-            return ColleagueResponse.fromEntity(
-                    currentUser, "la birou", String.valueOf(activeBooking.getSeat().getRoom().getFloor()), isFavorite
-            );
+    }
+
+        public ColleagueProfileResponse toColleagueProfileResponse(Integer userId, User colleague) {
+            List<User> listOfFavorites = favoriteColleagueRepository.findFavoriteUsersByUserId(userId);
+            boolean isFavorite = listOfFavorites.contains(colleague);
+            LocalDate threeWeeksAgo = LocalDate.now().minusWeeks(3);
+            List<Booking> bookings = bookingRepository
+                    .findByUserIdAndEndDateGreaterThanEqual(colleague.getId(), threeWeeksAgo);
+
+//            return;
         }
     }
 }
