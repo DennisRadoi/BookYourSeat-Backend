@@ -1,9 +1,6 @@
 package services;
 
-import dto.BookingDTOV2;
-import dto.ColleagueProfileResponse;
-import dto.ColleagueResponse;
-import dto.MyAccountResponse;
+import dto.*;
 import entities.Address;
 import entities.Booking;
 import entities.FavoriteColleague;
@@ -15,6 +12,7 @@ import org.springframework.stereotype.Service;
 import repositories.BookingRepository;
 import repositories.FavoriteColleagueRepository;
 import repositories.UserRepository;
+import utils.Filter;
 import utils.Utils;
 
 import java.time.LocalDate;
@@ -93,12 +91,52 @@ public class UserService {
         return MyAccountResponse.fromEntity(user, favorit);
     }
 
-    public List<ColleagueResponse> getColleagues(Integer userId) {
-        return userRepository.findAll()
+//    public List<ColleagueResponse> getColleagues(Integer userId) {
+//        return userRepository.findAll()
+//                .stream()
+//                .filter(u -> !u.getId().equals(userId))
+//                .map(u -> toColleagueResponse(userId, u))
+//                .toList();
+//    }
+
+    public PageResponse<ColleagueResponse> getColleagues(
+            Integer currentUserId,
+            String search,
+            String status,
+            Integer floor,
+            Boolean favorite,
+            int page,
+            int size) {
+        List<ColleagueResponse> filtered =  userRepository.findAll()
                 .stream()
-                .filter(u -> !u.getId().equals(userId))
-                .map(u -> toColleagueResponse(userId, u))
+                .filter(u -> !u.getId().equals(currentUserId))
+                .map(u -> toColleagueResponse(currentUserId, u))
+                .filter(response -> Filter.matchesSearch(response, search))
+                .filter(response -> Filter.matchesStatus(response, status))
+                .filter(response -> Filter.matchesFloor(response, floor))
+                .filter(response -> Filter.matchesFavorite(response, favorite))
                 .toList();
+
+        int fromIndex = page * size;
+
+        List<ColleagueResponse> content = fromIndex >= filtered.size()
+                ? List.of()
+                : filtered.subList(
+                fromIndex,
+                Math.min(fromIndex + size, filtered.size())
+        );
+
+        int totalPages = (int) Math.ceil(
+                (double) filtered.size() / size
+        );
+
+        return new PageResponse<>(
+                content,
+                page,
+                size,
+                filtered.size(),
+                totalPages
+        );
     }
 
     public ColleagueResponse toColleagueResponse(Integer userId, User colleague) {
@@ -136,7 +174,8 @@ public class UserService {
         }
     }
 
-    public ColleagueProfileResponse toColleagueProfileResponse(Integer userId, User colleague) {
+    public ColleagueProfileResponse toColleagueProfileResponse(Integer colleagueId, Integer userId) {
+        User colleague =  findById(colleagueId);
         List<User> listOfFavorites = favoriteColleagueRepository.findFavoriteUsersByUserId(userId);
         boolean isFavorite = listOfFavorites.contains(colleague);
 
@@ -182,5 +221,10 @@ public class UserService {
                 bookings,
                 location
         );
+    }
+
+    public MySettingsResponse toMySettingsResponse(Integer userId) {
+        User currentUser = findById(userId);
+        return MySettingsResponse.fromEntity(currentUser);
     }
 }
