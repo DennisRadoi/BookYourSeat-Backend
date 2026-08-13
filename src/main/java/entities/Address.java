@@ -1,6 +1,5 @@
 package entities;
 
-import entities.enums.AddressType;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -35,7 +34,11 @@ public class Address {
     private AddressType type;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "locality_id")
+    @JoinColumn(name =  "locality_id")
     private Locality locality;
 }
 
+enum AddressType {
+    de_domiciliu,
+    de_oficiu;
+}
