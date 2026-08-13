@@ -8,5 +8,7 @@ import java.util.List;
 
 @Repository
 public interface UserNotificationRepository extends JpaRepository<UserNotification, Integer> {
-    List<UserNotification> findByUserIdAndHasBeenReadFalse(Integer userId);
+    List<UserNotification> findByUserId(Integer userId);
+
+    List<UserNotification> findByUserIdAndHasBeenRead(Integer userId, Boolean hasBeenRead);
 }
