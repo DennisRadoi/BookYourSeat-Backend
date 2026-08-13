@@ -45,7 +45,7 @@ public class Seat {
     private Boolean hasStandupDesk;
 }
 
-enum SeatType {
+public enum SeatType {
     rezervabil,
     nu_este_rezervabil
 }

@@ -64,7 +64,7 @@ public class Booking {
     protected void onInsert() { this.status = BookingStatus.in_asteptare;}
 }
 
-enum BookingStatus {
+public enum BookingStatus {
     in_asteptare,
     finalizata,
     anulata,
