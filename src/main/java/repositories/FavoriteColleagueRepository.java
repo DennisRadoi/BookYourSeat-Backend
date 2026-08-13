@@ -1,5 +1,6 @@
 package repositories;
 
+import entities.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -8,9 +9,10 @@ import java.util.List;
 import java.util.Optional;
 
 public interface FavoriteColleagueRepository extends JpaRepository<entities.FavoriteColleague, Integer> {
-    Optional<entities.FavoriteColleague> findByUserIdAndFavoriteColleagueId(Integer userId, Integer favoriteColleagueId);
+    Optional<User> findByUserIdAndFavoriteColleagueId(Integer userId, Integer favoriteColleagueId);
 
-    boolean existsByUserIdAndFavoriteColleagueId(Integer userId, Integer favoriteColleagueId);
+    boolean existsByUserIdAndFavoriteColleagueId(Integer userId, Integer favoriteColleagueId)
+            ;
 
     void deleteByUserIdAndFavoriteColleagueId(Integer userId, Integer favoriteColleagueId);
 

@@ -1,14 +1,22 @@
 package services;
 
+import dto.ColleagueResponse;
 import dto.MyAccountResponse;
 import entities.Address;
+import entities.Booking;
 import entities.FavoriteColleague;
 import entities.User;
+import entities.enums.BookingStatus;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import repositories.BookingRepository;
 import repositories.FavoriteColleagueRepository;
 import repositories.UserRepository;
+import utils.Utils;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Random;
 
@@ -18,6 +26,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final FavoriteColleagueRepository favoriteColleagueRepository;
+    private final BookingRepository bookingRepository;
 
     public User findById(Integer id) {
         return userRepository.findById(id)
@@ -76,17 +85,44 @@ public class UserService {
 
         List<User> favoriti = favoriteColleagueRepository.findFavoriteUsersByUserId(userId);
 
-        String favorit = favoriti.isEmpty() ? null : GetRandomFavoriteColleage(favoriti);
+        String favorit = favoriti.isEmpty() ? null : Utils.getRandomFavoriteColleage(favoriti);
 
         return MyAccountResponse.fromEntity(user, favorit);
     }
 
-    private static String GetRandomFavoriteColleage(List<User> lista) {
-        int index = new Random().nextInt(lista.size());
+    public ColleagueResponse toColleagueResponse(Integer userId, User colleague) {
+        List<User> listOfFavorites = favoriteColleagueRepository.findFavoriteUsersByUserId(userId);
+        boolean isFavorite = listOfFavorites.contains(colleague);
 
-        User coleg = lista.get(index);
+        User currentUser = findById(userId);
+        if (!currentUser.getIsActive()) {
+            return ColleagueResponse.fromEntity(currentUser, "inactiv",
+                    null, isFavorite);
+        }
 
-        return coleg.getFirstName() + " " + coleg.getLastName();
+        Booking activeBooking = bookingRepository.findByUserIdAndStatus(
+                userId, BookingStatus.confirmata
+        ).stream()
+                .filter(b -> Utils.isActiveBookingNow(
+                LocalDate.now(), LocalTime.now(), b))
+                .findFirst()
+                .orElse(null);
+
+        if (activeBooking == null) {
+            return ColleagueResponse.fromEntity(
+                    currentUser, "remote", "remote", isFavorite
+            );
+        }
+
+        if (activeBooking.getSeat() == null) {
+            return ColleagueResponse.fromEntity(
+                    currentUser, "la birou", String.valueOf(activeBooking.getRoom().getFloor()), isFavorite
+            );
+        }
+        else {
+            return ColleagueResponse.fromEntity(
+                    currentUser, "la birou", String.valueOf(activeBooking.getSeat().getRoom().getFloor()), isFavorite
+            );
+        }
     }
-
 }

@@ -115,7 +115,6 @@ CREATE TABLE IF NOT EXISTS BOOKING(
                                       user_id INT NOT NULL REFERENCES USERS(id),
                                       room_id INT REFERENCES ROOM(id),
                                       seat_id INT REFERENCES SEAT(id),
-                                      date_of_booking TIMESTAMPTZ, -- mai ma gandesc aici,
                                       start_time TIME NOT NULL,
                                       end_time TIME NOT NULL,
                                       status VARCHAR(255) NOT NULL CHECK(
@@ -123,6 +122,8 @@ CREATE TABLE IF NOT EXISTS BOOKING(
                                           ),
                                       created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
                                       updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+                                      start_date DATE NOT NULL,
+                                      end_date DATE NOT NULL,
                                       CONSTRAINT chk_booking CHECK(
                                           (room_id IS NULL AND seat_id IS NOT NULL)
                                               OR
@@ -135,14 +136,9 @@ CREATE TABLE IF NOT EXISTS BOOKING(
 
 CREATE TABLE IF NOT EXISTS RECURRING_BOOKING(
                                                 id INT PRIMARY KEY REFERENCES BOOKING(id),
-                                                start_date DATE NOT NULL,
-                                                end_date DATE NOT NULL,
                                                 frequency VARCHAR(255) NOT NULL,
                                                 days_of_week VARCHAR(16) NOT NULL,
-                                                interval_of_recurrence VARCHAR(255) NOT NULL,
-                                                CONSTRAINT chk_rec_booking CHECK(
-                                                    start_date < end_date
-                                                    )
+                                                interval_of_recurrence INT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS NOTIFICATION(
