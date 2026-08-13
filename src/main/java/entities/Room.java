@@ -3,9 +3,12 @@ package entities;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.List;
+
 @Entity
 @Table(name = "room")
-@Getter @Setter
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 
@@ -21,10 +24,19 @@ public class Room {
     @Column(nullable = false)
     private String name;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String type;
+    private RoomType type;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "building_id")
     private Building building;
+
+    @OneToMany(mappedBy = "seat")
+    private List<Seat> seats;
+}
+
+enum RoomType {
+    de_oficiu,
+    de_conferinta
 }

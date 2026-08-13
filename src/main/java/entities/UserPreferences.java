@@ -9,7 +9,7 @@ import lombok.Setter;
 import java.time.LocalTime;
 
 @Entity
-@Table(name = "USER_PREFERENCES")
+@Table(name = "user_preferences")
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter

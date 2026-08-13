@@ -9,7 +9,7 @@ import lombok.Setter;
 import java.time.OffsetDateTime;
 
 @Entity
-@Table(name = "FAVORITE_COLLEAGUE")
+@Table(name = "favorite_colleague")
 @Getter
 @Setter
 @AllArgsConstructor
