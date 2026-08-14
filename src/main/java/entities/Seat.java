@@ -19,7 +19,7 @@ public class Seat {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "room_id", nullable = false)
-    Room room;
+    private Room room;
 
     @Column(name = "status", length = 50)
     private String status;

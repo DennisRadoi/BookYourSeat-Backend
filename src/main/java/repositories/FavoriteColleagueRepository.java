@@ -1,5 +1,6 @@
 package repositories;
 
+import entities.FavoriteColleague;
 import entities.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -8,7 +9,7 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 import java.util.Optional;
 
-public interface FavoriteColleagueRepository extends JpaRepository<entities.FavoriteColleague, Integer> {
+public interface FavoriteColleagueRepository extends JpaRepository<FavoriteColleague, Integer> {
     Optional<User> findByUserIdAndFavoriteColleagueId(Integer userId, Integer favoriteColleagueId);
 
     boolean existsByUserIdAndFavoriteColleagueId(Integer userId, Integer favoriteColleagueId)
@@ -21,5 +22,5 @@ public interface FavoriteColleagueRepository extends JpaRepository<entities.Favo
             FROM FavoriteColleague fc
             WHERE fc.user.id = :userId   
             """)
-    List<entities.User> findFavoriteUsersByUserId(@Param("userId") Integer userId);
+    List<User> findFavoriteUsersByUserId(@Param("userId") Integer userId);
 }

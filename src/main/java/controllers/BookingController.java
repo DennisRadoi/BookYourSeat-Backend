@@ -1,18 +1,17 @@
 package controllers;
 
-
 import services.BookingService;
-import dto.BookingDTO;
-import dto.RecurringBookingDTO;
-import entities.Booking;
-import entities.RecurringBooking;
+import dto.CreateBookingRequest;
+import dto.UpdateBookingRequest;
+import dto.UpdateRecurringBookingRequest;
+import dto.GetBookingResponse;
+import dto.GetRecurringBookingResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @RestController
 public class BookingController {
@@ -24,28 +23,27 @@ public class BookingController {
     }
 
     @GetMapping("/bookings/me")
-    public ResponseEntity<List<BookingDTO>> getMyBookings(
-            @RequestParam(name = "userId", defaultValue = "1") Integer userId,
+    public ResponseEntity<List<GetBookingResponse>> getMyBookings(
+            @RequestParam(name = "userId") Integer userId,
             @RequestParam(name = "status", required = false) String status) {
-        return ResponseEntity.ok(bookingService.getUserBookings(userId, status).stream()
-                .map(BookingDTO::fromEntity)
-                .collect(Collectors.toList()));
+        return ResponseEntity.ok(bookingService.getUserBookingsDTO(userId, status));
     }
 
     @GetMapping("/bookings/{id}")
-    public ResponseEntity<BookingDTO> getBookingById(@PathVariable Integer id) {
-        return ResponseEntity.ok(BookingDTO.fromEntity(bookingService.getBookingById(id)));
+    public ResponseEntity<GetBookingResponse> getBookingById(@PathVariable Integer id) {
+        return ResponseEntity.ok(bookingService.getBookingByIdDTO(id));
     }
 
     @PostMapping("/bookings")
-    public ResponseEntity<BookingDTO> createBooking(@RequestBody Booking booking) {
-        Booking created = bookingService.createBooking(booking);
-        return new ResponseEntity<>(BookingDTO.fromEntity(created), HttpStatus.CREATED);
+    public ResponseEntity<GetBookingResponse> createBooking(@RequestBody CreateBookingRequest request) {
+        return new ResponseEntity<>(bookingService.createBookingDTO(request), HttpStatus.CREATED);
     }
 
     @PutMapping("/bookings/{id}")
-    public ResponseEntity<BookingDTO> updateBooking(@PathVariable Integer id, @RequestBody Booking booking) {
-        return ResponseEntity.ok(BookingDTO.fromEntity(bookingService.updateBooking(id, booking)));
+    public ResponseEntity<GetBookingResponse> updateBooking(
+            @PathVariable Integer id,
+            @RequestBody UpdateBookingRequest request) {
+        return ResponseEntity.ok(bookingService.updateBookingDTO(id, request));
     }
 
     @PutMapping("/bookings/{id}/cancel")
@@ -53,11 +51,16 @@ public class BookingController {
         return ResponseEntity.ok(bookingService.cancelBooking(id));
     }
 
+    @GetMapping("/recurring-bookings/{id}")
+    public ResponseEntity<GetRecurringBookingResponse> getRecurringBookingById(@PathVariable Integer id) {
+        return ResponseEntity.ok(bookingService.getRecurringBookingByIdDTO(id));
+    }
+
     @PutMapping("/recurring-bookings/{id}")
-    public ResponseEntity<RecurringBookingDTO> updateRecurringBooking(
+    public ResponseEntity<GetRecurringBookingResponse> updateRecurringBooking(
             @PathVariable Integer id,
-            @RequestBody RecurringBooking recurringBooking) {
-        return ResponseEntity.ok(RecurringBookingDTO.fromEntity(bookingService.updateRecurringBooking(id, recurringBooking)));
+            @RequestBody UpdateRecurringBookingRequest request) {
+        return ResponseEntity.ok(bookingService.updateRecurringBookingDTO(id, request));
     }
 
     @PatchMapping("/recurring-bookings/{id}")

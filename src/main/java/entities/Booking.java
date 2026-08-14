@@ -64,5 +64,5 @@ public class Booking {
     }
 
     @PrePersist
-    protected void onInsert() { this.status = BookingStatus.in_asteptare;}
+    protected void onInsert() { this.status = BookingStatus.IN_ASTEPTARE;}
 }

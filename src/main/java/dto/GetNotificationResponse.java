@@ -5,7 +5,7 @@ import entities.UserNotification;
 
 import java.time.OffsetDateTime;
 
-public record NotificationDTO(
+public record GetNotificationResponse(
         Integer id,
         Integer userId,
         String message,
@@ -14,7 +14,7 @@ public record NotificationDTO(
         Integer bookingId,
         Boolean hasBeenRead
 ) {
-    public static NotificationDTO fromEntity(UserNotification userNotification) {
+    public static GetNotificationResponse fromEntity(UserNotification userNotification) {
         if (userNotification == null) {
             return null;
         }
@@ -24,7 +24,7 @@ public record NotificationDTO(
         if (userNotification.getUser() != null) {
             uid = userNotification.getUser().getId();
         }
-        return new NotificationDTO(
+        return new GetNotificationResponse(
                 userNotification.getId(),
                 uid,
                 notification != null ? notification.getMessage() : null,

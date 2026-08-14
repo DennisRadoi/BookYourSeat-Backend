@@ -1,6 +1,7 @@
 package repositories;
 
 import entities.Seat;
+import entities.enums.SeatType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -19,7 +20,7 @@ public interface SeatRepository extends JpaRepository<Seat, Integer> {
             "(:hasMonitor IS NULL OR s.hasMonitor = :hasMonitor) AND " +
             "(:hasStandupDesk IS NULL OR s.hasStandupDesk = :hasStandupDesk)")
     List<Seat> findWithFilters(
-            @Param("type") String type,
+            @Param("type") SeatType type,
             @Param("nearWindow") Boolean nearWindow,
             @Param("hasMonitor") Boolean hasMonitor,
             @Param("hasStandupDesk") Boolean hasStandupDesk
