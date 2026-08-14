@@ -1,4 +1,4 @@
-package dto.auth;
+package security.dto;
 
 public record LoginResponse(
         String token
