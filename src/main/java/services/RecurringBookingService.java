@@ -28,7 +28,7 @@ public class RecurringBookingService {
         RecurringBooking existing = getById(id);
         existing.setFrequency(recurringBooking.getFrequency());
         existing.setDaysOfWeek(recurringBooking.getDaysOfWeek());
-        existing.setIntervalOfReccur(recurringBooking.getIntervalOfReccur());
+        existing.setIntervalOfRecurrence(recurringBooking.getIntervalOfRecurrence());
         return recurringBookingRepository.save(existing);
     }
 

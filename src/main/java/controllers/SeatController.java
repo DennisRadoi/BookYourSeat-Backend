@@ -1,7 +1,7 @@
 package controllers;
 
 import services.SeatService;
-import dto.SeatDTO;
+import dto.GetSeatResponse;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,19 +21,19 @@ public class SeatController {
     }
 
     @GetMapping("/seats/{id}")
-    public ResponseEntity<SeatDTO> getSeatById(@PathVariable Integer id) {
-        return ResponseEntity.ok(SeatDTO.fromEntity(seatService.getSeatById(id)));
+    public ResponseEntity<GetSeatResponse> getSeatById(@PathVariable Integer id) {
+        return ResponseEntity.ok(GetSeatResponse.fromEntity(seatService.getSeatById(id)));
     }
 
     @GetMapping("/rooms/room/{id}/seats")
-    public ResponseEntity<List<SeatDTO>> getSeatsByRoom(@PathVariable Integer id) {
+    public ResponseEntity<List<GetSeatResponse>> getSeatsByRoom(@PathVariable Integer id) {
         return ResponseEntity.ok(seatService.getSeatsByRoom(id).stream()
-                .map(SeatDTO::fromEntity)
+                .map(GetSeatResponse::fromEntity)
                 .collect(Collectors.toList()));
     }
 
     @GetMapping("/seats")
-    public ResponseEntity<List<SeatDTO>> searchSeats(
+    public ResponseEntity<List<GetSeatResponse>> searchSeats(
             @RequestParam(name = "type", required = false) String type,
             @RequestParam(name = "nearWindow", required = false) Boolean nearWindow,
             @RequestParam(name = "hasMonitor", required = false) Boolean hasMonitor,
@@ -44,7 +44,7 @@ public class SeatController {
 
         return ResponseEntity.ok(seatService.searchAvailableSeats(type, nearWindow, hasMonitor, hasStandupDesk, date, startTime, endTime)
                 .stream()
-                .map(SeatDTO::fromEntity)
+                .map(GetSeatResponse::fromEntity)
                 .collect(Collectors.toList()));
     }
 }

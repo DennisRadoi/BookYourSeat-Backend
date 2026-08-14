@@ -8,5 +8,6 @@ import java.util.List;
 
 @Repository
 public interface NotificationRepository extends JpaRepository<Notification, Integer> {
+    // query by user id
     List<Notification> findByUserId(Integer userId);
 }
