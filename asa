@@ -1,0 +1,58 @@
+[1mdiff --git a/src/main/java/dto/BookingDto.java b/src/main/java/dto/BookingDto.java[m
+[1mindex 650c7e4..b503cfd 100644[m
+[1m--- a/src/main/java/dto/BookingDto.java[m
+[1m+++ b/src/main/java/dto/BookingDto.java[m
+[36m@@ -2,16 +2,43 @@[m [mpackage dto;[m
+ [m
+ import entities.Booking;[m
+ [m
+[31m-// only seat bookings[m
+[31m-public record BookingDto(String dateOfBooking, String startTime, String endTime,[m
+[31m-                         Integer floor, String building) {[m
+[31m-    public static BookingDto fromEntity(Booking booking) {[m
+[31m-        return new BookingDto([m
+[31m-                String.valueOf(booking.getStartDate()),[m
+[31m-                String.valueOf(booking.getStartTime()),[m
+[31m-                String.valueOf(booking.getEndTime()),[m
+[31m-                booking.getSeat().getRoom().getFloor(),[m
+[31m-                booking.getSeat().getRoom().getBuilding().getName()[m
+[32m+[m[32mimport java.time.LocalDate;[m
+[32m+[m[32mimport java.time.LocalTime;[m
+[32m+[m[32mimport java.time.OffsetDateTime;[m
+[32m+[m[32mimport entities.BookingStatus;[m
+[32m+[m
+[32m+[m[32mpublic record BookingDTO([m
+[32m+[m[32m        Integer id,[m
+[32m+[m[32m        Integer userId,[m
+[32m+[m[32m        Integer roomId,[m
+[32m+[m[32m        Integer seatId,[m
+[32m+[m[32m        Integer recurringBookingId,[m
+[32m+[m[32m        LocalTime startTime,[m
+[32m+[m[32m        LocalTime endTime,[m
+[32m+[m[32m        BookingStatus status,[m
+[32m+[m[32m        LocalDate date,[m
+[32m+[m[32m        LocalDate endDate,[m
+[32m+[m[32m        OffsetDateTime createdAt,[m
+[32m+[m[32m        OffsetDateTime updatedAt[m
+[32m+[m[32m) {[m
+[32m+[m[32m    public static BookingDTO fromEntity(Booking booking) {[m
+[32m+[m[32m        if (booking == null) {[m
+[32m+[m[32m            return null;[m
+[32m+[m[32m        }[m
+[32m+[m
+[32m+[m[32m        return new BookingDTO([m
+[32m+[m[32m                booking.getId(),[m
+[32m+[m[32m                booking.getUserId(),[m
+[32m+[m[32m                booking.getRoomId(),[m
+[32m+[m[32m                booking.getSeat() != null ? booking.getSeat().getId() : null,[m
+[32m+[m[32m                booking.getRecurringBooking() != null ? booking.getRecurringBooking().getId() : null,[m
+[32m+[m[32m                booking.getStartTime(),[m
+[32m+[m[32m                booking.getEndTime(),[m
+[32m+[m[32m                booking.getStatus(),[m
+[32m+[m[32m                booking.getDate(),[m
+[32m+[m[32m                booking.getEndDate(),[m
+[32m+[m[32m                booking.getCreatedAt(),[m
+[32m+[m[32m                booking.getUpdatedAt()[m
+         );[m
+     }[m
+ }[m
