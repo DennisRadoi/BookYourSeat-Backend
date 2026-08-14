@@ -15,7 +15,7 @@ public class UserController {
     public final UserService userService;
     public final FavoriteColleagueService favoriteColleagueService;
 
-    @GetMapping("/me")
+    @GetMapping("/")
     public PageResponse<ColleagueResponse> getColleagues(
             @RequestParam Integer currentUserId,
             @RequestParam(required = false) String search,
