@@ -75,7 +75,9 @@ CREATE TABLE IF NOT EXISTS USER_PREFERENCES(
                                                preferred_building VARCHAR(255),
                                                near_window BOOLEAN NOT NULL,
                                                quiet_place BOOLEAN NOT NULL,
-                                               days_of_week VARCHAR(255),
+
+
+                                q               days_of_week VARCHAR(255),
                                                 reminder_before_booking BOOLEAN NOT NULL,
                                                 booking_confirmation_on_email BOOLEAN NOT NULL
 );
