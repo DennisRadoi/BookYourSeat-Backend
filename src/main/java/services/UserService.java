@@ -1,12 +1,12 @@
 package services;
 
 import dto.*;
-import entities.Booking;
-import entities.User;
+import entities.*;
 import entities.enums.BookingStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import repositories.BookingRepository;
+import repositories.DepartmentRepository;
 import repositories.FavoriteColleagueRepository;
 import repositories.UserRepository;
 import utils.Filter;
@@ -23,6 +23,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final FavoriteColleagueRepository favoriteColleagueRepository;
     private final BookingRepository bookingRepository;
+    private final DepartmentRepository departmentRepository;
 
     public User findById(Integer id) {
         return userRepository.findById(id)
@@ -221,5 +222,51 @@ public class UserService {
     public MySettingsResponse toMySettingsResponse(Integer userId) {
         User currentUser = findById(userId);
         return MySettingsResponse.fromEntity(currentUser);
+    }
+
+    @Transactional
+    public MyAccountResponse updateProfile(Integer currentUserId,
+                                           UpdateMyAccountRequest request) {
+        User user = findById(currentUserId);
+        if (request.fullname() != null) {
+            String[] name = request.fullname().split(" ");
+            user.setFirstName(name[0]);
+            user.setLastName(name[1]);
+        }
+        if (request.phoneNumber() != null) {
+            if (request.phoneNumber().length() != 10) {
+                throw new RuntimeException("Phone number size is invalid.");
+            }
+            user.setPhoneNumber(request.phoneNumber());
+        }
+        if (request.email() != null) {
+            if (userRepository.existsByEmailAndIdNot(request.email(), currentUserId)) {
+                throw new RuntimeException("Email address already in use.");
+            }
+            user.setEmail(request.email());
+        }
+        if (request.profilePhoto() != null) {
+            user.setProfilePhoto(request.profilePhoto());
+        }
+
+        if (request.departmentName() != null) {
+            Department department = departmentRepository
+                    .findByName(request.departmentName())
+                    .orElseThrow(() -> new RuntimeException(
+                            "Departamentul nu exista."
+                    ));
+            user.setDepartment(department);
+        }
+        userRepository.save(user);
+
+        List<User> list = favoriteColleagueRepository.findFavoriteUsersByUserId(user.getId());
+        String preferredColleague = list.isEmpty()
+                ? null
+                : Utils.getRandomFavoriteColleage(list);
+
+        return MyAccountResponse.fromEntity(
+                user,
+                preferredColleague
+        );
     }
 }
