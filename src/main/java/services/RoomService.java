@@ -3,7 +3,6 @@ package services;
 import dto.RoomResponseDTO;
 import entities.Room;
 import entities.enums.RoomType;
-import org.springframework.beans.factory.annotation.Autowired;
 import repositories.RoomRepository;
 
 import org.springframework.stereotype.Service;

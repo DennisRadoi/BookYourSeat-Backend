@@ -1,12 +1,9 @@
 package services;
 
 import dto.*;
-import entities.Address;
 import entities.Booking;
-import entities.FavoriteColleague;
 import entities.User;
 import entities.enums.BookingStatus;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import repositories.BookingRepository;
@@ -17,9 +14,7 @@ import utils.Utils;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 @Service
 @RequiredArgsConstructor

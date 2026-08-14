@@ -1,6 +1,8 @@
 package services;
 
+import dto.GetBookingResponse;
 import dto.CreateBookingRequest;
+import dto.GetRecurringBookingResponse;
 import dto.UpdateBookingRequest;
 import dto.UpdateRecurringBookingRequest;
 import entities.Booking;
@@ -37,33 +39,33 @@ public class BookingService {
     private final SeatRepository seatRepository;
 
     // DTO mapping methods — perform mapping inside transactional service to avoid LazyInitializationException
-    public java.util.List<dto.GetBookingResponse> getUserBookingsDTO(Integer userId, String status) {
+    public java.util.List<GetBookingResponse> getUserBookingsDTO(Integer userId, String status) {
         return getUserBookings(userId, status).stream()
-                .map(dto.GetBookingResponse::fromEntity)
+                .map(GetBookingResponse::fromEntity)
                 .toList();
     }
 
-    public dto.GetBookingResponse getBookingByIdDTO(Integer id) {
-        return dto.GetBookingResponse.fromEntity(getBookingById(id));
+    public GetBookingResponse getBookingByIdDTO(Integer id) {
+        return GetBookingResponse.fromEntity(getBookingById(id));
     }
 
-    public dto.GetBookingResponse createBookingDTO(dto.CreateBookingRequest request) {
+    public GetBookingResponse createBookingDTO(CreateBookingRequest request) {
         Booking created = createBooking(request);
-        return dto.GetBookingResponse.fromEntity(created);
+        return GetBookingResponse.fromEntity(created);
     }
 
-    public dto.GetBookingResponse updateBookingDTO(Integer id, dto.UpdateBookingRequest request) {
+    public GetBookingResponse updateBookingDTO(Integer id, UpdateBookingRequest request) {
         Booking updated = updateBooking(id, request);
-        return dto.GetBookingResponse.fromEntity(updated);
+        return GetBookingResponse.fromEntity(updated);
     }
 
-    public dto.GetRecurringBookingResponse getRecurringBookingByIdDTO(Integer id) {
-        return dto.GetRecurringBookingResponse.fromEntity(getRecurringBookingById(id));
+    public GetRecurringBookingResponse getRecurringBookingByIdDTO(Integer id) {
+        return GetRecurringBookingResponse.fromEntity(getRecurringBookingById(id));
     }
 
-    public dto.GetRecurringBookingResponse updateRecurringBookingDTO(Integer id, dto.UpdateRecurringBookingRequest request) {
+    public GetRecurringBookingResponse updateRecurringBookingDTO(Integer id, UpdateRecurringBookingRequest request) {
         RecurringBooking updated = updateRecurringBooking(id, request);
-        return dto.GetRecurringBookingResponse.fromEntity(updated);
+        return GetRecurringBookingResponse.fromEntity(updated);
     }
 
     public List<Booking> getUserBookings(Integer userId, String status) {
