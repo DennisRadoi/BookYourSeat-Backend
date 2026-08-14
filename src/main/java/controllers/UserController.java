@@ -2,6 +2,7 @@ package controllers;
 
 import dto.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import services.FavoriteColleagueService;
 import services.UserService;
@@ -15,7 +16,7 @@ public class UserController {
     public final UserService userService;
     public final FavoriteColleagueService favoriteColleagueService;
 
-    @GetMapping("/me")
+    @GetMapping("/")
     public PageResponse<ColleagueResponse> getColleagues(
             @RequestParam Integer currentUserId,
             @RequestParam(required = false) String search,
@@ -53,5 +54,11 @@ public class UserController {
     @DeleteMapping("me/favorite/{id}")
     public void removeFavorite(@PathVariable Integer colleagueId, @PathVariable Integer userId) {
         favoriteColleagueService.removeFavorite(colleagueId, userId);
+    }
+
+    @PatchMapping("/me")
+    public MyAccountResponse updateProfile(Integer currentUserId,
+                                           @Validated @RequestBody UpdateMyAccountRequest request) {
+        return userService.updateProfile(currentUserId, request);
     }
 }

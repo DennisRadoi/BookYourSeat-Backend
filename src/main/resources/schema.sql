@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS DEPARTMENT(
                                          id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-                                         name VARCHAR(255) NOT NULL,
+                                         name VARCHAR(255) NOT NULL UNIQUE,
                                          description VARCHAR(255) NOT NULL
 );
 
