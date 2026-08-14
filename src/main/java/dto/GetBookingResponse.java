@@ -1,42 +1,42 @@
 package dto;
 
 import entities.Booking;
+import entities.enums.BookingStatus;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
-import entities.BookingStatus;
 
-public record BookingDTO(
+public record GetBookingResponse(
         Integer id,
         Integer userId,
         Integer roomId,
         Integer seatId,
         Integer recurringBookingId,
+        LocalDate startDate,
+        LocalDate endDate,
         LocalTime startTime,
         LocalTime endTime,
         BookingStatus status,
-        LocalDate date,
-        LocalDate endDate,
         OffsetDateTime createdAt,
         OffsetDateTime updatedAt
 ) {
-    public static BookingDTO fromEntity(Booking booking) {
+    public static GetBookingResponse fromEntity(Booking booking) {
         if (booking == null) {
             return null;
         }
 
-        return new BookingDTO(
+        return new GetBookingResponse(
                 booking.getId(),
-                booking.getUserId(),
-                booking.getRoomId(),
+                booking.getUser() != null ? booking.getUser().getId() : null,
+                booking.getRoom() != null ? booking.getRoom().getId() : null,
                 booking.getSeat() != null ? booking.getSeat().getId() : null,
                 booking.getRecurringBooking() != null ? booking.getRecurringBooking().getId() : null,
+                booking.getStartDate(),
+                booking.getEndDate(),
                 booking.getStartTime(),
                 booking.getEndTime(),
                 booking.getStatus(),
-                booking.getDate(),
-                booking.getEndDate(),
                 booking.getCreatedAt(),
                 booking.getUpdatedAt()
         );

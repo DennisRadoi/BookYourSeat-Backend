@@ -1,6 +1,7 @@
 package services;
 
 import entities.Seat;
+import entities.enums.SeatType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import repositories.BookingRepository;
@@ -32,7 +33,8 @@ public class SeatService {
     public List<Seat> searchAvailableSeats(String type, Boolean nearWindow, Boolean hasMonitor,
                                            Boolean hasStandupDesk, LocalDate date, LocalTime startTime,
                                            LocalTime endTime) {
-        List<Seat> seats = seatRepository.findWithFilters(type, nearWindow, hasMonitor, hasStandupDesk);
+        SeatType seatType = parseSeatType(type);
+        List<Seat> seats = seatRepository.findWithFilters(seatType, nearWindow, hasMonitor, hasStandupDesk);
         if (date == null || startTime == null || endTime == null) {
             return seats;
         }
@@ -41,5 +43,16 @@ public class SeatService {
         return seats.stream()
                 .filter(seat -> seat.getId() != null && !bookedSeatIds.contains(seat.getId()))
                 .collect(Collectors.toList());
+    }
+
+    private SeatType parseSeatType(String type) {
+        if (type == null || type.isBlank()) {
+            return null;
+        }
+        try {
+            return SeatType.valueOf(type);
+        } catch (IllegalArgumentException ex) {
+            throw new IllegalArgumentException("Tip de loc necunoscut: " + type);
+        }
     }
 }
