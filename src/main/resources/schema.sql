@@ -35,8 +35,8 @@ CREATE TABLE IF NOT EXISTS USERS(
                                     first_name VARCHAR(255) NOT NULL,
                                     email VARCHAR(255) NOT NULL UNIQUE,
                                     department_id INT REFERENCES DEPARTMENT(id),
-                                    role VARCHAR(255) NOT NULL,
-                                    phone_number CHAR(10) NOT NULL UNIQUE,
+                                    role VARCHAR(255),
+                                    phone_number CHAR(10) UNIQUE,
                                     address_id INT REFERENCES ADDRESS(id),
                                     profile_photo VARCHAR(255),
                                     employment_date DATE,
@@ -75,7 +75,9 @@ CREATE TABLE IF NOT EXISTS USER_PREFERENCES(
                                                preferred_building VARCHAR(255),
                                                near_window BOOLEAN NOT NULL,
                                                quiet_place BOOLEAN NOT NULL,
-                                               days_of_week VARCHAR(255)
+                                               days_of_week VARCHAR(255),
+                                                reminder_before_booking BOOLEAN NOT NULL,
+                                                booking_confirmation_on_email BOOLEAN NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS BUILDING(

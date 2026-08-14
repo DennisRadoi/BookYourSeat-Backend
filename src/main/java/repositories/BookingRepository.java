@@ -17,7 +17,7 @@ public interface BookingRepository extends JpaRepository<Booking, Integer> {
 
     List<Booking> findByUserId(Integer userId);
 
-    List<Booking> findByUserIdAndDateGreaterThanEqual(Integer userId, LocalDate date);
+    List<Booking> findByUserIdAndEndDateGreaterThanEqual(Integer userId, LocalDate date);
 
     List<Booking> findByUserIdAndDateLessThan(Integer userId, LocalDate date);
 
@@ -33,4 +33,6 @@ public interface BookingRepository extends JpaRepository<Booking, Integer> {
             @Param("startTime") LocalTime startTime,
             @Param("endTime") LocalTime endTime
     );
+
+    List<Booking> findByUserIdAndStatus(Integer userId, BookingStatus bookingStatus);
 }

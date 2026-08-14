@@ -46,8 +46,3 @@ public class Seat {
     @Column(name = "has_standup_desk")
     private Boolean hasStandupDesk;
 }
-
-public enum SeatType {
-    rezervabil,
-    nu_este_rezervabil
-}
