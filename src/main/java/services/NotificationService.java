@@ -1,5 +1,6 @@
 package services;
 
+import dto.GetNotificationResponse;
 import entities.UserNotification;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -17,14 +18,14 @@ public class NotificationService {
 
     private final UserNotificationRepository userNotificationRepository;
 
-    public java.util.List<dto.GetNotificationResponse> getUserNotifications(Integer userId, Boolean isRead) {
+    public java.util.List<GetNotificationResponse> getUserNotifications(Integer userId, Boolean isRead) {
         java.util.List<UserNotification> entities;
         if (isRead == null) {
             entities = userNotificationRepository.findByUserId(userId);
         } else {
             entities = userNotificationRepository.findByUserIdAndHasBeenRead(userId, isRead);
         }
-        return entities.stream().map(dto.GetNotificationResponse::fromEntity).toList();
+        return entities.stream().map(GetNotificationResponse::fromEntity).toList();
     }
 
     public void markNotificationAsRead(Integer userId, Integer id) {

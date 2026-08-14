@@ -6,8 +6,6 @@ import org.springframework.web.bind.annotation.*;
 import services.FavoriteColleagueService;
 import services.UserService;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/users")
 @RequiredArgsConstructor

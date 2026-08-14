@@ -6,14 +6,12 @@ import dto.UpdateBookingRequest;
 import dto.UpdateRecurringBookingRequest;
 import dto.GetBookingResponse;
 import dto.GetRecurringBookingResponse;
-import entities.Booking;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @RestController
 public class BookingController {

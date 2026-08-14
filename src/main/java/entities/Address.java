@@ -26,7 +26,7 @@ public class Address {
     @Column(name = "apartment_block")
     private String apartmentBlock;
 
-    @Column(name = "postal_code", nullable = false)
+    @Column(name = "postal_code", nullable = false, length = 6)
     private String postalCode;
 
     @Enumerated(EnumType.STRING)
