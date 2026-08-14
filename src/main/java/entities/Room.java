@@ -1,5 +1,6 @@
 package entities;
 
+import entities.enums.RoomType;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -32,7 +33,7 @@ public class Room {
     @JoinColumn(name = "building_id")
     private Building building;
 
-    @OneToMany(mappedBy = "seat")
+    @OneToMany(mappedBy = "room")
     private List<Seat> seats;
 }
 
