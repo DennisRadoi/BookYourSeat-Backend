@@ -15,7 +15,7 @@ public class Building {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    private Integer id;
 
     @Column(name = "name", nullable = false)
     private String name;
@@ -24,6 +24,6 @@ public class Building {
     @JoinColumn(name = "address_id")
     private Address address;
 
-    @OneToMany(mappedBy = "room")
+    @OneToMany(mappedBy = "building")
     private List<Room> rooms;
 }
