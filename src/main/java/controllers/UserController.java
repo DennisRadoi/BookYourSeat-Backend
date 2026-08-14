@@ -3,6 +3,7 @@ package controllers;
 import dto.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+import services.FavoriteColleagueService;
 import services.UserService;
 
 import java.util.List;
@@ -12,8 +13,9 @@ import java.util.List;
 @RequiredArgsConstructor
 public class UserController {
     public final UserService userService;
+    public final FavoriteColleagueService favoriteColleagueService;
 
-    @GetMapping
+    @GetMapping("/me")
     public PageResponse<ColleagueResponse> getColleagues(
             @RequestParam Integer currentUserId,
             @RequestParam(required = false) String search,
@@ -41,5 +43,15 @@ public class UserController {
     @GetMapping("/{id}")
     public ColleagueProfileResponse getColleague(@PathVariable Integer colleagueId, Integer currentUserId) {
         return userService.toColleagueProfileResponse(colleagueId, currentUserId);
+    }
+
+    @PutMapping("me/favorites/{id}")
+    public void addFavorite(@PathVariable Integer colleagueId, @PathVariable Integer userId) {
+        favoriteColleagueService.addFavorite(colleagueId, userId);
+    }
+
+    @DeleteMapping("me/favorite/{id}")
+    public void removeFavorite(@PathVariable Integer colleagueId, @PathVariable Integer userId) {
+        favoriteColleagueService.removeFavorite(colleagueId, userId);
     }
 }

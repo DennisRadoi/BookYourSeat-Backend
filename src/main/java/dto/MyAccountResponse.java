@@ -24,6 +24,7 @@ public record MyAccountResponse(String firstName, String lastName,
                 preferedColleague
             );
     }
+
     private static String formatAddress(Address address) {
         if (address == null) {
             return null;

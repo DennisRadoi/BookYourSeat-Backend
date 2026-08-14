@@ -107,7 +107,7 @@ public class UserService {
             Boolean favorite,
             int page,
             int size) {
-        List<ColleagueResponse> filtered =  userRepository.findAll()
+        List<ColleagueResponse> filtered = userRepository.findAll()
                 .stream()
                 .filter(u -> !u.getId().equals(currentUserId))
                 .map(u -> toColleagueResponse(currentUserId, u))
