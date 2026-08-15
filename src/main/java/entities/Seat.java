@@ -1,8 +1,8 @@
 package entities;
 
+import entities.enums.SeatStatus;
 import jakarta.persistence.*;
 import lombok.*;
-import entities.enums.SeatType;
 
 @Entity
 @Table(name = "seat")
@@ -25,8 +25,8 @@ public class Seat {
     private String status;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "type")
-    private SeatType type;
+    @Column(name = "status")
+    private SeatStatus type;
 
     @Column(name = "x_position")
     private Integer xPosition;

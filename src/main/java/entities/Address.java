@@ -1,5 +1,6 @@
 package entities;
 
+import entities.enums.AddressType;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -26,7 +27,7 @@ public class Address {
     @Column(name = "apartment_block")
     private String apartmentBlock;
 
-    @Column(name = "postal_code", nullable = false, length = 6)
+    @Column(name = "postal_code", nullable = false, length = 6, columnDefinition = "CHAR(6)")
     private String postalCode;
 
     @Enumerated(EnumType.STRING)
@@ -36,9 +37,4 @@ public class Address {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name =  "locality_id")
     private Locality locality;
-}
-
-enum AddressType {
-    de_domiciliu,
-    de_oficiu;
 }

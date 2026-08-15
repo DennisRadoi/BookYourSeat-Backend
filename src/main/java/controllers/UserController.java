@@ -13,7 +13,7 @@ public class UserController {
     public final UserService userService;
     public final FavoriteColleagueService favoriteColleagueService;
 
-    @GetMapping("/")
+    @GetMapping
     public PageResponse<ColleagueResponse> getColleagues(
             @RequestParam Integer currentUserId,
             @RequestParam(required = false) String search,
@@ -38,8 +38,8 @@ public class UserController {
         return userService.getMyAccountResponse(userId);
     }
 
-    @GetMapping("/{id}")
-    public ColleagueProfileResponse getColleague(@PathVariable Integer colleagueId, Integer currentUserId) {
+    @GetMapping("/{colleagueId}")
+    public ColleagueProfileResponse getColleague(@PathVariable Integer colleagueId, @RequestParam Integer currentUserId) {
         return userService.toColleagueProfileResponse(colleagueId, currentUserId);
     }
 

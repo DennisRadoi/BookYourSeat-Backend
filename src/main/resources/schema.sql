@@ -21,10 +21,10 @@ CREATE TABLE IF NOT EXISTS ADDRESS(
                                       number VARCHAR(255) NOT NULL,
                                       floor INT,
                                       apartment_block VARCHAR(255),
-                                      postal_code CHAR(6) NOT NULL,
+                                      postal_code VARCHAR(6) NOT NULL,
                                       locality_id INT REFERENCES LOCALITY(id),
                                       type VARCHAR(255) NOT NULL CHECK(
-                                          type IN('de domiciliu', 'de oficiu')
+                                          type IN('DE_DOMICILIU', 'DE_OFICIU')
                                           )
 );
 
@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS USERS(
                                     email VARCHAR(255) NOT NULL UNIQUE,
                                     department_id INT REFERENCES DEPARTMENT(id),
                                     role VARCHAR(255),
-                                    phone_number CHAR(10) UNIQUE,
+                                    phone_number VARCHAR(10) UNIQUE,
                                     address_id INT REFERENCES ADDRESS(id),
                                     profile_photo VARCHAR(255),
                                     employment_date DATE,
@@ -93,7 +93,7 @@ CREATE TABLE IF NOT EXISTS ROOM(
                                    building_id INT REFERENCES BUILDING(id),
                                    name VARCHAR(255) NOT NULL,
                                    type VARCHAR(255) NOT NULL CHECK(
-                                       type IN('de birou', 'de conferinta')
+                                       type IN('DE_OFICIU', 'DE_CONFERINTA')
                                        )
 );
 
@@ -101,9 +101,8 @@ CREATE TABLE IF NOT EXISTS SEAT(
                                    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
                                    room_id INT REFERENCES ROOM(id),
                                    status VARCHAR(255) NOT NULL CHECK(
-                                       status IN('rezervabil', 'nu_este_rezervabil') -- nu neaparat tine de ocupat
+                                       status IN('REZERVABIL', 'NU_ESTE_REZERVABIL') -- nu neaparat tine de ocupat
                                        ),
-                                   type VARCHAR(255) NOT NULL,
                                    x_position INT NOT NULL,
                                    y_position INT NOT NULL,
                                    has_monitor BOOLEAN NOT NULL,
@@ -120,7 +119,7 @@ CREATE TABLE IF NOT EXISTS BOOKING(
                                       start_time TIME NOT NULL,
                                       end_time TIME NOT NULL,
                                       status VARCHAR(255) NOT NULL CHECK(
-                                          status IN('in asteptare', 'finalizata', 'anulata', 'confirmata')
+                                          status IN('IN_ASTEPTARE', 'FINALIZATA', 'ANULATA', 'CONFIRMATA')
                                           ),
                                       created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
                                       updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
