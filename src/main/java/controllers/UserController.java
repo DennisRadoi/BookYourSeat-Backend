@@ -13,7 +13,7 @@ public class UserController {
     public final UserService userService;
     public final FavoriteColleagueService favoriteColleagueService;
 
-    @GetMapping
+    @GetMapping // e ok
     public PageResponse<ColleagueResponse> getColleagues(
             @RequestParam Integer currentUserId,
             @RequestParam(required = false) String search,
@@ -28,28 +28,28 @@ public class UserController {
         );
     }
 
-    @GetMapping("/me/settings")
+    @GetMapping("/me/settings") // e ok
     public MySettingsResponse getMySettings(@RequestParam Integer userId) {
         return userService.toMySettingsResponse(userId);
     }
 
-    @GetMapping("/me")
+    @GetMapping("/me") // e ok
     public MyAccountResponse getMyAccount(@RequestParam Integer userId) {
         return userService.getMyAccountResponse(userId);
     }
 
-    @GetMapping("/{colleagueId}")
+    @GetMapping("/{colleagueId}") // e ok
     public ColleagueProfileResponse getColleague(@PathVariable Integer colleagueId, @RequestParam Integer currentUserId) {
         return userService.toColleagueProfileResponse(colleagueId, currentUserId);
     }
 
-    @PutMapping("me/favorites/{id}")
-    public void addFavorite(@PathVariable Integer colleagueId, @PathVariable Integer userId) {
+    @PutMapping("me/favorites/{colleagueId}") // e ok dar trebuie sa adaug status code 201
+    public void addFavorite(@PathVariable Integer colleagueId, @RequestParam Integer userId) {
         favoriteColleagueService.addFavorite(colleagueId, userId);
     }
 
-    @DeleteMapping("me/favorite/{id}")
-    public void removeFavorite(@PathVariable Integer colleagueId, @PathVariable Integer userId) {
+    @DeleteMapping("me/favorite/{colleagueId}") // e ok
+    public void removeFavorite(@PathVariable Integer colleagueId, @RequestParam Integer userId) {
         favoriteColleagueService.removeFavorite(colleagueId, userId);
     }
 }

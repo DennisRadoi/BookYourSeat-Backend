@@ -139,7 +139,7 @@ public class UserService {
         boolean isFavorite = listOfFavorites.contains(colleague);
 
         User currentUser = findById(userId);
-        if (!currentUser.getIsActive()) {
+        if (!colleague.getIsActive()) {
             return ColleagueResponse.fromEntity(colleague, "inactiv",
                     null, isFavorite);
         }
@@ -157,8 +157,7 @@ public class UserService {
                     colleague, "remote", null, isFavorite
             );
         }
-
-        if (activeBooking.getSeat() == null) {
+        else if (activeBooking.getSeat() == null) {
             return ColleagueResponse.fromEntity(
                     colleague, "la birou", String.valueOf(activeBooking.getRoom().getFloor()), isFavorite
             );
@@ -202,8 +201,7 @@ public class UserService {
         if (activeBooking == null) {
             location = new String("remote");
         }
-
-        if (activeBooking.getSeat() == null) {
+        else if (activeBooking.getSeat() == null) {
             location = String.valueOf(activeBooking.getRoom().getFloor());
         } else {
             location = String.valueOf(activeBooking.getSeat().getRoom().getFloor());
