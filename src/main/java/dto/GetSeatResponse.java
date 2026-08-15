@@ -6,7 +6,7 @@ import entities.Seat;
 public record GetSeatResponse(
         Integer id,
         Integer roomId,
-        String status,
+        entities.enums.SeatStatus status,
 //        SeatType type,
         Integer xPosition,
         Integer yPosition,
