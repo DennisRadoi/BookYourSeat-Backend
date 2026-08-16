@@ -2,6 +2,8 @@ package controllers;
 
 import dto.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import services.FavoriteColleagueService;
@@ -44,12 +46,19 @@ public class UserController {
         return userService.toColleagueProfileResponse(colleagueId, currentUserId);
     }
 
-    @PutMapping("me/favorites/{colleagueId}") // e ok dar trebuie sa adaug status code 201
-    public void addFavorite(@PathVariable Integer colleagueId, @RequestParam Integer userId) {
-        favoriteColleagueService.addFavorite(colleagueId, userId);
+    @PostMapping("me/favorites/{colleagueId}") // e ok dar trebuie sa adaug status code 201
+    public ResponseEntity<Void> addFavorite(@PathVariable Integer colleagueId,
+                                            @RequestParam Integer userId) {
+
+        boolean created = favoriteColleagueService.addFavorite(colleagueId, userId);
+
+        if (created) {
+            return ResponseEntity.status(HttpStatus.CREATED).build();
+        }
+        return ResponseEntity.noContent().build();
     }
 
-    @DeleteMapping("me/favorite/{colleagueId}") // e ok
+    @DeleteMapping("me/favorites/{colleagueId}") // e ok
     public void removeFavorite(@PathVariable Integer colleagueId, @RequestParam Integer userId) {
         favoriteColleagueService.removeFavorite(colleagueId, userId);
     }
