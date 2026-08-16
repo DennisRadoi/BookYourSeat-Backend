@@ -1,6 +1,7 @@
 package controllers;
 
 import dto.*;
+import entities.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -46,21 +47,32 @@ public class UserController {
         return userService.toColleagueProfileResponse(colleagueId, currentUserId);
     }
 
-    @PostMapping("me/favorites/{colleagueId}") // e ok dar trebuie sa adaug status code 201
-    public ResponseEntity<Void> addFavorite(@PathVariable Integer colleagueId,
+    @PostMapping("me/favorites/{colleagueId}")
+    public ResponseEntity<String> addFavorite(@PathVariable Integer colleagueId,
                                             @RequestParam Integer userId) {
 
         boolean created = favoriteColleagueService.addFavorite(colleagueId, userId);
 
         if (created) {
-            return ResponseEntity.status(HttpStatus.CREATED).build();
+            return ResponseEntity.status(HttpStatus.CREATED).body("Added favorite to currentUser list.");
         }
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body("Colleague is already in favorites.");
     }
 
-    @DeleteMapping("me/favorites/{colleagueId}") // e ok
-    public void removeFavorite(@PathVariable Integer colleagueId, @RequestParam Integer userId) {
-        favoriteColleagueService.removeFavorite(colleagueId, userId);
+    @DeleteMapping("/me/favorites/{colleagueId}") // e ok
+    public ResponseEntity<String> removeFavorite(@PathVariable Integer colleagueId, @RequestParam Integer userId) {
+        boolean deleted = favoriteColleagueService.removeFavorite(colleagueId, userId);
+
+        User colleague = userService.findById(colleagueId);
+
+        if (deleted) {
+            return ResponseEntity.status(HttpStatus.OK).body("Deleted favorite with name " + colleague.getFirstName()
+                    + " " + colleague.getLastName() + " from currentUser list.");
+        }
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(colleague.getLastName() + " " + colleague.getFirstName() +
+                " is already a favortie of currentUser");
     }
 
     @PatchMapping("/me") // e ok trb sa actualizez status code

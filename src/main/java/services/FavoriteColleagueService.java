@@ -18,13 +18,12 @@ public class FavoriteColleagueService {
     }
 
     @Transactional
-    public void removeFavorite(Integer favoriteId, Integer currentUserId) {
+    public boolean removeFavorite(Integer favoriteId, Integer currentUserId) {
         if (favoriteColleagueRepository.existsByUserIdAndFavoriteColleagueId(currentUserId, favoriteId)) {
             favoriteColleagueRepository.deleteByUserIdAndFavoriteColleagueId(currentUserId, favoriteId);
+            return true;
         }
-        else {
-            throw new RuntimeException("User is not in current user's list of favorite colleagues.");
-        }
+        return false;
     }
 
     @Transactional

@@ -33,7 +33,8 @@ public record MyAccountResponse(String firstName, String lastName,
         return address.getLocality().getCounty().getName()
                 + ", " + address.getLocality().getName()
                 + ", " + address.getStreet()
-                + " " + address.getNumber();
+                + " " + address.getNumber()
+                + " " + address.getPostalCode();
     }
 }
 
