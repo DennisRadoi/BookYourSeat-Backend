@@ -7,5 +7,4 @@ public record UpdateMyAccountRequest(String fullname,
                                      String phoneNumber,
                                      String departmentName,
                                      UpdateMyAdressRequest updateMyAdressRequest) {
-    
 }

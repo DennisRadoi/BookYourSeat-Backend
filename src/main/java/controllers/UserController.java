@@ -80,4 +80,10 @@ public class UserController {
                                            @Validated @RequestBody UpdateMyAccountRequest request) {
         return userService.updateProfile(currentUserId, request);
     }
+
+    @PatchMapping("/me/preferences")
+    public MyAccountResponse updateAccountPreferences(@RequestParam Integer currentUserId,
+                                                      @Validated @RequestBody UpdateAccountPreferencesRequest request) {
+        return userService.updateAccountPagePreferences(currentUserId, request);
+    }
 }

@@ -338,4 +338,26 @@ public class UserService {
         addressRepository.save(newAddress);
         u.setAddress(newAddress);
     }
+
+    @Transactional // transactional face update-ul in SQL chiar daca am modificat doar obiectul in Java prin dirty checking
+    public MyAccountResponse updateAccountPagePreferences(Integer currentUserId,
+                                             UpdateAccountPreferencesRequest request) {
+        if (request == null) {
+            throw new RuntimeException("Request is null.");
+        }
+        User u = findById(currentUserId);
+        UserPreferences userPreferences = u.getUserPreferences();
+
+        if (request.nearWindow() != null) {
+            userPreferences.setNearWindow(request.nearWindow());
+        }
+        if (request.quietPlaces() != null) {
+            userPreferences.setQuietPlace(request.quietPlaces());
+        }
+        List<User> list = favoriteColleagueRepository.findFavoriteUsersByUserId(u.getId());
+        String preferredColleague = list.isEmpty()
+                ? null
+                : Utils.getRandomFavoriteColleage(list);
+        return MyAccountResponse.fromEntity(u, preferredColleague);
+    }
 }
