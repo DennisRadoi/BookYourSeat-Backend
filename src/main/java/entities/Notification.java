@@ -40,4 +40,7 @@ public class Notification {
         this.createdAt = OffsetDateTime.now();
     }
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "office_invitation_id")
+    private OfficeInvitation officeInvitation;
 }

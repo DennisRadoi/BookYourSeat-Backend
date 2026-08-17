@@ -2,7 +2,6 @@ package dto;
 
 import java.time.LocalDate;
 
-public record CreateInvitationRequest(Integer recieverId,
-                                      String message, LocalDate proposedDate) {
+public record CreateInvitationRequest(String message, LocalDate proposedDate) {
 
 }
