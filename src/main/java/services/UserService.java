@@ -36,9 +36,6 @@ public class UserService {
                 .orElseThrow(() -> new ResourceNotFoundException("User", id));
     }
 
-    /**
-     * Returneaza userul autentificat curent extras din contextul JWT.
-     */
     public User getCurrentUser() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         return userRepository.findByEmail(email)
@@ -339,7 +336,6 @@ public class UserService {
             }
             address.setLocality(locality);
         }
-        // Entitatea existenta e managed de JPA — dirty checking face UPDATE automat in @Transactional
     }
 
     @Transactional

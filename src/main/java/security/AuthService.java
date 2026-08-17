@@ -85,7 +85,6 @@ public class AuthService {
 
         userRepository.save(user);
 
-        // Creeaza preferinte default pentru noul user
         UserPreferences preferences = new UserPreferences();
         preferences.setUser(user);
         preferences.setBookingConfirmationOnEmail(false);
