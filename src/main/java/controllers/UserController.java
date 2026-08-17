@@ -16,12 +16,11 @@ import java.util.List;
 @RequestMapping("/users")
 @RequiredArgsConstructor
 public class UserController {
-    public final UserService userService;
-    public final FavoriteColleagueService favoriteColleagueService;
+    private final UserService userService;
+    private final FavoriteColleagueService favoriteColleagueService;
 
-    @GetMapping // e ok
+    @GetMapping
     public PageResponse<ColleagueResponse> getColleagues(
-            @RequestParam Integer currentUserId,
             @RequestParam(required = false) String search,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) Integer floor,
@@ -29,32 +28,34 @@ public class UserController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "5") int size
     ) {
+        Integer currentUserId = userService.getCurrentUser().getId();
         return userService.getColleagues(
                 currentUserId, search, status, floor, favorite, page, size
         );
     }
 
-    @GetMapping("/me/settings") // e ok
-    public MySettingsResponse getMySettings(@RequestParam Integer userId) {
+    @GetMapping("/me/settings")
+    public MySettingsResponse getMySettings() {
+        Integer userId = userService.getCurrentUser().getId();
         return userService.toMySettingsResponse(userId);
     }
 
-    @GetMapping("/me") // e ok
-    public MyAccountResponse getMyAccount(@RequestParam Integer userId) {
+    @GetMapping("/me")
+    public MyAccountResponse getMyAccount() {
+        Integer userId = userService.getCurrentUser().getId();
         return userService.getMyAccountResponse(userId);
     }
 
-    @GetMapping("/{colleagueId}") // e ok
-    public ColleagueProfileResponse getColleague(@PathVariable Integer colleagueId, @RequestParam Integer currentUserId) {
+    @GetMapping("/{colleagueId}")
+    public ColleagueProfileResponse getColleague(@PathVariable Integer colleagueId) {
+        Integer currentUserId = userService.getCurrentUser().getId();
         return userService.toColleagueProfileResponse(colleagueId, currentUserId);
     }
 
-    @PostMapping("me/favorites/{colleagueId}")
-    public ResponseEntity<String> addFavorite(@PathVariable Integer colleagueId,
-                                            @RequestParam Integer userId) {
-
+    @PutMapping("/me/favorites/{colleagueId}")
+    public ResponseEntity<String> addFavorite(@PathVariable Integer colleagueId) {
+        Integer userId = userService.getCurrentUser().getId();
         boolean created = favoriteColleagueService.addFavorite(colleagueId, userId);
-
         if (created) {
             return ResponseEntity.status(HttpStatus.CREATED).body("Added favorite to currentUser list.");
         }
@@ -62,39 +63,45 @@ public class UserController {
                 .body("Colleague is already in favorites.");
     }
 
-    @DeleteMapping("/me/favorites/{colleagueId}") // e ok
-    public ResponseEntity<String> removeFavorite(@PathVariable Integer colleagueId, @RequestParam Integer userId) {
+    @DeleteMapping("/me/favorites/{colleagueId}")
+    public ResponseEntity<String> removeFavorite(@PathVariable Integer colleagueId) {
+        Integer userId = userService.getCurrentUser().getId();
         boolean deleted = favoriteColleagueService.removeFavorite(colleagueId, userId);
 
-        User colleague = userService.findById(colleagueId);
-
         if (deleted) {
-            return ResponseEntity.status(HttpStatus.OK).body("Deleted favorite with name " + colleague.getFirstName()
-                    + " " + colleague.getLastName() + " from currentUser list.");
+            User colleague = userService.findById(colleagueId);
+            return ResponseEntity.ok("Deleted favorite " + colleague.getFirstName()
+                    + " " + colleague.getLastName() + " from list.");
         }
 
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(colleague.getLastName() + " " + colleague.getFirstName() +
-                " is already a favortie of currentUser");
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body("Colleague is not in your favorites list.");
     }
 
-    @PatchMapping("/me") // e ok trb sa actualizez status code
-    public MyAccountResponse updateProfile(@RequestParam Integer currentUserId,
-                                           @Validated @RequestBody UpdateMyAccountRequest request) {
+    @PatchMapping("/me")
+    public MyAccountResponse updateProfile(
+            @Validated @RequestBody UpdateMyAccountRequest request) {
+        Integer currentUserId = userService.getCurrentUser().getId();
         return userService.updateProfile(currentUserId, request);
     }
 
-    @PatchMapping("/me/preferences") // e ok
-    public MyAccountResponse updateAccountPreferences(@RequestParam Integer currentUserId,
-                                                      @Validated @RequestBody UpdateAccountPreferencesRequest request) {
+    @PatchMapping("/me/preferences")
+    public MyAccountResponse updateAccountPreferences(
+            @Validated @RequestBody UpdateAccountPreferencesRequest request) {
+        Integer currentUserId = userService.getCurrentUser().getId();
         return userService.updateAccountPagePreferences(currentUserId, request);
     }
-    @PatchMapping("me/settings/preferences") // e ok
-    public MySettingsResponse updateSettingsPreferences(@RequestParam Integer currentUserId,
-                                                       @Validated @RequestBody UpdateSettingsPreferencesRequest request) {
+
+    @PatchMapping("me/settings/preferences")
+    public MySettingsResponse updateSettingsPreferences(
+            @Validated @RequestBody UpdateSettingsPreferencesRequest request) {
+        Integer currentUserId = userService.getCurrentUser().getId();
         return userService.updateSettings(currentUserId, request);
     }
+
     @GetMapping("/me/favorites")
-    public List<ColleagueResponse> GetMyFavorites(@RequestParam Integer currentUserId) {
+    public List<ColleagueResponse> getMyFavorites() {
+        Integer currentUserId = userService.getCurrentUser().getId();
         return userService.getListOfFavorites(currentUserId);
     }
 }

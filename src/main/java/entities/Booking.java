@@ -64,5 +64,8 @@ public class Booking {
     }
 
     @PrePersist
-    protected void onInsert() { this.status = BookingStatus.IN_ASTEPTARE;}
+    protected void onInsert() {
+        this.status = BookingStatus.IN_ASTEPTARE;
+        this.updatedAt = OffsetDateTime.now();
+    }
 }

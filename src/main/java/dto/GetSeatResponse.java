@@ -1,6 +1,7 @@
 package dto;
 
 import entities.Seat;
+import entities.enums.SeatStatus;
 
 public record GetSeatResponse(
         Integer id,
@@ -21,7 +22,7 @@ public record GetSeatResponse(
         return new GetSeatResponse(
                 seat.getId(),
                 seat.getRoom() != null ? seat.getRoom().getId() : null,
-                seat.getStatus(),
+                seat.getStatus() != null ? seat.getStatus().name() : null,
                 seat.getXPosition(),
                 seat.getYPosition(),
                 seat.getHasMonitor(),

@@ -16,8 +16,8 @@ public class Filter {
 
     public static boolean matchesFloor(ColleagueResponse response, Integer floor) {
         return floor == null
-                || response.location() != null
-                && response.location().equalsIgnoreCase("Etaj " + floor);
+                || (response.location() != null
+                && response.location().equals(String.valueOf(floor)));
     }
 
     public static boolean matchesFavorite(

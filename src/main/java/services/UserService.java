@@ -2,11 +2,13 @@ package services;
 
 import dto.*;
 import entities.*;
-import entities.enums.AddressType;
 import entities.enums.BookingStatus;
-import jakarta.transaction.Transactional;
+import exceptions.EmailAlreadyExistsException;
+import exceptions.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import repositories.*;
 import utils.Filter;
 import utils.Utils;
@@ -31,7 +33,16 @@ public class UserService {
 
     public User findById(Integer id) {
         return userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Utilizatorul nu exista."));
+                .orElseThrow(() -> new ResourceNotFoundException("User", id));
+    }
+
+    /**
+     * Returneaza userul autentificat curent extras din contextul JWT.
+     */
+    public User getCurrentUser() {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User with email " + email, -1));
     }
 
     public List<User> findAll() {
@@ -40,7 +51,7 @@ public class UserService {
 
     public User findByEmail(String email) {
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Utilizator cu acest email" + email + " nu exista"));
+                .orElseThrow(() -> new ResourceNotFoundException("User with email " + email, -1));
     }
 
     public List<User> findByLastName(String lastName) {
@@ -53,12 +64,12 @@ public class UserService {
 
     public User findByLastNameAndFirstName(String lastName, String firstName) {
         return userRepository.findByLastNameAndFirstName(lastName, firstName)
-                .orElseThrow(() -> new RuntimeException("Utilizatorul nu exista."));
+                .orElseThrow(() -> new ResourceNotFoundException("User", -1));
     }
 
     public User findByPhoneNumber(String phoneNumber) {
         return userRepository.findByPhoneNumber(phoneNumber)
-                .orElseThrow(() -> new RuntimeException("Utilizatorul nu exista."));
+                .orElseThrow(() -> new ResourceNotFoundException("User with phone " + phoneNumber, -1));
     }
 
     public boolean existsByPhoneNumber(String phoneNumber) {
@@ -86,7 +97,7 @@ public class UserService {
 
         List<User> favoriti = favoriteColleagueRepository.findFavoriteUsersByUserId(userId);
 
-        String favorit = favoriti.isEmpty() ? null : Utils.getRandomFavoriteColleage(favoriti);
+        String favorit = favoriti.isEmpty() ? null : Utils.getRandomFavoriteColleague(favoriti);
 
         return MyAccountResponse.fromEntity(user, favorit);
     }
@@ -143,7 +154,7 @@ public class UserService {
         List<User> listOfFavorites = favoriteColleagueRepository.findFavoriteUsersByUserId(userId);
         boolean isFavorite = listOfFavorites.contains(colleague);
 
-        User currentUser = findById(userId);
+        // Check colleague's active status (not currentUser's)
         if (!colleague.getIsActive()) {
             return ColleagueResponse.fromEntity(colleague, "inactiv",
                     null, isFavorite);
@@ -181,7 +192,7 @@ public class UserService {
         List<User> listOfFavoritesOfColleague = favoriteColleagueRepository
                 .findFavoriteUsersByUserId(colleague.getId());
         String favorit = listOfFavoritesOfColleague
-                .isEmpty() ? null : Utils.getRandomFavoriteColleage(listOfFavoritesOfColleague);
+                .isEmpty() ? null : Utils.getRandomFavoriteColleague(listOfFavoritesOfColleague);
 
         LocalDate threeWeeksAgo = LocalDate.now().minusWeeks(3);
         List<BookingDTOV2> bookings = bookingRepository
@@ -190,9 +201,12 @@ public class UserService {
                 .map(b -> BookingDTOV2.fromEntity(b))
                 .toList();
 
-        String location = null;
+        String location;
         if (!colleague.getIsActive()) {
-            location = new String("inactiv");
+            // Return early — no need to check bookings for inactive users
+            return ColleagueProfileResponse.fromEntity(
+                    colleague, favorit, isFavorite, bookings, "inactiv"
+            );
         }
 
         Booking activeBooking = bookingRepository.findByUserIdAndStatus(
@@ -204,9 +218,8 @@ public class UserService {
                 .orElse(null);
 
         if (activeBooking == null) {
-            location = new String("remote");
-        }
-        else if (activeBooking.getSeat() == null) {
+            location = "remote";
+        } else if (activeBooking.getSeat() == null) {
             location = String.valueOf(activeBooking.getRoom().getFloor());
         } else {
             location = String.valueOf(activeBooking.getSeat().getRoom().getFloor());
@@ -232,22 +245,25 @@ public class UserService {
         User user = findById(currentUserId);
 
         UpdateMyAdressRequest updateMyAdressRequest = request.updateMyAdressRequest();
-        updateAdress(user, updateMyAdressRequest);
+        updateAddress(user, updateMyAdressRequest);
 
         if (request.fullname() != null) {
-            String[] name = request.fullname().split(" ");
+            String[] name = request.fullname().split(" ", 2);
+            if (name.length < 2) {
+                throw new IllegalArgumentException("Fullname must contain first and last name separated by space.");
+            }
             user.setFirstName(name[0]);
             user.setLastName(name[1]);
         }
         if (request.phoneNumber() != null) {
             if (request.phoneNumber().length() != 10) {
-                throw new RuntimeException("Phone number size is invalid.");
+                throw new IllegalArgumentException("Phone number size is invalid.");
             }
             user.setPhoneNumber(request.phoneNumber());
         }
         if (request.email() != null) {
             if (userRepository.existsByEmailAndIdNot(request.email(), currentUserId)) {
-                throw new RuntimeException("Email address already in use.");
+                throw new EmailAlreadyExistsException(request.email());
             }
             user.setEmail(request.email());
         }
@@ -268,7 +284,7 @@ public class UserService {
         List<User> list = favoriteColleagueRepository.findFavoriteUsersByUserId(user.getId());
         String preferredColleague = list.isEmpty()
                 ? null
-                : Utils.getRandomFavoriteColleage(list);
+                : Utils.getRandomFavoriteColleague(list);
 
         return MyAccountResponse.fromEntity(
                 user,
@@ -276,42 +292,30 @@ public class UserService {
         );
     }
 
-    private void updateAdress(User u, UpdateMyAdressRequest request) {
+    private void updateAddress(User u, UpdateMyAdressRequest request) {
         if (request == null) {
             return;
         }
-        Address adress = u.getAddress();
-        Address newAddress = new Address();
+        Address address = u.getAddress();
 
         if (request.street() != null) {
-            newAddress.setStreet(request.street());
-        } else {
-            newAddress.setStreet(adress.getStreet());
+            address.setStreet(request.street());
         }
         if (request.number() != null) {
-            newAddress.setNumber(request.number());
-        } else {
-            newAddress.setNumber(adress.getNumber());
+            address.setNumber(request.number());
         }
         if (request.apartmentBlock() != null) {
-            newAddress.setApartmentBlock(request.apartmentBlock());
-        } else {
-            newAddress.setApartmentBlock(adress.getApartmentBlock());
+            address.setApartmentBlock(request.apartmentBlock());
         }
         if (request.postalCode() != null) {
-            newAddress.setPostalCode(request.postalCode());
-        } else {
-            newAddress.setPostalCode(adress.getPostalCode());
+            address.setPostalCode(request.postalCode());
         }
         if (request.floor() != null) {
-            newAddress.setFloor(request.floor());
-        } else {
-            newAddress.setFloor(adress.getFloor());
+            address.setFloor(request.floor());
         }
         if (request.county() != null && request.locality() == null) {
-            throw new RuntimeException("If you u want to modify the county, you have to provide the locality too");
+            throw new IllegalArgumentException("If you want to modify the county, you have to provide the locality too");
         }
-        Locality locality = adress.getLocality();
         if (request.locality() != null) {
             County county;
             if (request.county() != null) {
@@ -321,11 +325,10 @@ public class UserService {
                     county.setName(request.county());
                     countyRepository.save(county);
                 }
+            } else {
+                county = address.getLocality().getCounty();
             }
-            else {
-                county = adress.getLocality().getCounty();
-            }
-            locality = localityRepository.findByNameAndCountyName(request.locality(),
+            Locality locality = localityRepository.findByNameAndCountyName(request.locality(),
                             county.getName())
                     .orElse(null);
             if (locality == null) {
@@ -334,18 +337,16 @@ public class UserService {
                 locality.setCounty(county);
                 localityRepository.save(locality);
             }
+            address.setLocality(locality);
         }
-        newAddress.setLocality(locality);
-        newAddress.setType(AddressType.DE_DOMICILIU);
-        addressRepository.save(newAddress);
-        u.setAddress(newAddress);
+        // Entitatea existenta e managed de JPA — dirty checking face UPDATE automat in @Transactional
     }
 
-    @Transactional // transactional face update-ul in SQL chiar daca am modificat doar obiectul in Java prin dirty checking
+    @Transactional
     public MyAccountResponse updateAccountPagePreferences(Integer currentUserId,
                                              UpdateAccountPreferencesRequest request) {
         if (request == null) {
-            throw new RuntimeException("Request is null.");
+            throw new IllegalArgumentException("Request is null.");
         }
         User u = findById(currentUserId);
         UserPreferences userPreferences = u.getUserPreferences();
@@ -359,7 +360,7 @@ public class UserService {
         List<User> list = favoriteColleagueRepository.findFavoriteUsersByUserId(u.getId());
         String preferredColleague = list.isEmpty()
                 ? null
-                : Utils.getRandomFavoriteColleage(list);
+                : Utils.getRandomFavoriteColleague(list);
         return MyAccountResponse.fromEntity(u, preferredColleague);
     }
 
@@ -367,7 +368,7 @@ public class UserService {
     public MySettingsResponse updateSettings(Integer currentUserId,
                                              UpdateSettingsPreferencesRequest request) {
         if (request == null) {
-            throw new RuntimeException("Request is null.");
+            throw new IllegalArgumentException("Request is null.");
         }
         User u = findById(currentUserId);
         UserPreferences userPreferences = u.getUserPreferences();
@@ -378,23 +379,13 @@ public class UserService {
             userPreferences.setBookingConfirmationOnEmail(request.receivesNotificationOnEmail());
         }
         if (request.daysOfWeek() != null) {
-            String daysOfWeek = "";
-            if (request.daysOfWeek().contains("MONDAY")) {
-                daysOfWeek = daysOfWeek + "1";
-            }
-            if (request.daysOfWeek().contains("TUESDAY")) {
-                daysOfWeek = daysOfWeek + ",2";
-            }
-            if (request.daysOfWeek().contains("WEDNESDAY")) {
-                daysOfWeek = daysOfWeek + ",3";
-            }
-            if (request.daysOfWeek().contains("THURSDAY")) {
-                daysOfWeek = daysOfWeek + ",4";
-            }
-            if (request.daysOfWeek().contains("FRIDAY")) {
-                daysOfWeek = daysOfWeek + ",5";
-            }
-            userPreferences.setDaysOfWeek(daysOfWeek);
+            List<String> parts = new ArrayList<>();
+            if (request.daysOfWeek().contains("MONDAY"))    parts.add("1");
+            if (request.daysOfWeek().contains("TUESDAY"))   parts.add("2");
+            if (request.daysOfWeek().contains("WEDNESDAY")) parts.add("3");
+            if (request.daysOfWeek().contains("THURSDAY"))  parts.add("4");
+            if (request.daysOfWeek().contains("FRIDAY"))    parts.add("5");
+            userPreferences.setDaysOfWeek(String.join(",", parts));
         }
         if (request.preferredEndTime() != null) {
             userPreferences.setPreferredEndTime(LocalTime.parse(request.preferredEndTime()));
@@ -404,10 +395,10 @@ public class UserService {
         }
         if (request.preferredBuilding() != null) {
             if (buildingRepository.existsByName(request.preferredBuilding())) {
-                userPreferences.setPreferredBuilding(buildingRepository.findByName(request.preferredBuilding()).orElse(null));
-            }
-            else {
-                throw new RuntimeException("The building " + request.preferredBuilding() + " doesn't exist.");
+                userPreferences.setPreferredBuilding(
+                        buildingRepository.findByName(request.preferredBuilding()).orElse(null));
+            } else {
+                throw new IllegalArgumentException("The building " + request.preferredBuilding() + " doesn't exist.");
             }
         }
         return MySettingsResponse.fromEntity(u);

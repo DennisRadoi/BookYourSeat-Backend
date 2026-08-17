@@ -203,7 +203,9 @@ public class BookingService {
         if (booking.getEndDate().isBefore(booking.getStartDate())) {
             throw new IllegalArgumentException("Data de sfarsit nu poate fi inainte de data de inceput");
         }
-        if (!booking.getStartTime().isBefore(booking.getEndTime())) {
+        // Validarea ordinii orelor are sens doar pentru rezervari de o singura zi
+        if (booking.getStartDate().equals(booking.getEndDate())
+                && !booking.getStartTime().isBefore(booking.getEndTime())) {
             throw new IllegalArgumentException("Ora de inceput trebuie sa fie inainte de ora de sfarsit");
         }
         if ((booking.getRoom() == null) == (booking.getSeat() == null)) {

@@ -20,12 +20,6 @@ public interface UserRepository extends JpaRepository<User, Integer> {
     List<User> findAllByIsActiveTrue();
     List<User> findAllByIsActiveFalse();
     boolean existsByEmailAndIdNot(String email, Integer id);
-    @Query(value = """
-        SELECT u.*
-                FROM USERS u
-                JOIN DEPARTMENT d ON d.id = u.department_id
-                WHERE d.name = :name
-        """
-    , nativeQuery = true)
+    @Query("SELECT u FROM User u WHERE u.department.name = :name")
     List<User> findALlByDepartmentName(@Param("name") String name);
 }
