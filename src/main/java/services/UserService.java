@@ -13,6 +13,7 @@ import utils.Utils;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -410,5 +411,12 @@ public class UserService {
             }
         }
         return MySettingsResponse.fromEntity(u);
+    }
+
+    public List<ColleagueResponse> getListOfFavorites(Integer currentUserId) {
+        List<User> favorites = favoriteColleagueRepository.findFavoriteUsersByUserId(currentUserId);
+        return favorites.stream()
+                .map(colleague -> toColleagueResponse(currentUserId, colleague))
+                .toList();
     }
 }

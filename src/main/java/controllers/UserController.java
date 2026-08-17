@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.*;
 import services.FavoriteColleagueService;
 import services.UserService;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/users")
 @RequiredArgsConstructor
@@ -90,5 +92,9 @@ public class UserController {
     public MySettingsResponse updateSettingsPreferences(@RequestParam Integer currentUserId,
                                                        @Validated @RequestBody UpdateSettingsPreferencesRequest request) {
         return userService.updateSettings(currentUserId, request);
+    }
+    @GetMapping("/me/favorites")
+    public List<ColleagueResponse> GetMyFavorites(@RequestParam Integer currentUserId) {
+        return userService.getListOfFavorites(currentUserId);
     }
 }
