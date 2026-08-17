@@ -30,6 +30,9 @@ public class UserService {
     private final CountyRepository countyRepository;
     private final LocalityRepository localityRepository;
     private final BuildingRepository buildingRepository;
+    private final OfficeInvitationRepository officeInvitationRepository;
+    private final NotificationRepository notificationRepostiory;
+    private final UserNotificationRepository userNotificationRepository;
 
     public User findById(Integer id) {
         return userRepository.findById(id)
@@ -405,5 +408,38 @@ public class UserService {
         return favorites.stream()
                 .map(colleague -> toColleagueResponse(currentUserId, colleague))
                 .toList();
+    }
+
+    @Transactional
+    public InvitationResponse createInvitation(Integer currentUserId,
+                                               CreateInvitationRequest request) {
+        User u = findById(currentUserId);
+        User addresse = findById(request.recieverId());
+
+        if (u.getId().equals(addresse.getId())) {
+            throw new RuntimeException("Can't send an invitation to yourself.");
+        }
+
+        OfficeInvitation officeInvitation = new OfficeInvitation();
+        officeInvitation.setUser(u);
+        officeInvitation.setAddressee(addresse);
+        officeInvitation.setMessage(request.message());
+        officeInvitation.setProposedDate(request.proposedDate());
+        officeInvitationRepository.save(officeInvitation);
+
+        Notification notification = new Notification();
+        notification.setUser(u);
+        notification.setType("invitatie");
+        String message = "";
+        notification.setMessage(
+                u.getFirstName() + " " + u.getLastName() + " te-a invitat la birou pe " + request.proposedDate() + ".");
+        notificationRepostiory.save(notification);
+
+        UserNotification userNotification = new UserNotification();
+        userNotification.setUser(addresse);
+        userNotification.setNotification(notification);
+        userNotificationRepository.save(userNotification);
+
+        return InvitationResponse.fromEntity(officeInvitation);
     }
 }

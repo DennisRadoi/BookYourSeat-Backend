@@ -19,10 +19,15 @@ public class UserNotification {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(name = "has_been_read", nullable = false)
+    @Column(name = "has_been_read")
     private Boolean hasBeenRead;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "notification_id", nullable = false)
     private Notification notification;
+
+    @PrePersist
+    public void prePersist() {
+        hasBeenRead = false;
+    }
 }

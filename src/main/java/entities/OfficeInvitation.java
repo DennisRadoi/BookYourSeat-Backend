@@ -37,6 +37,11 @@ public class OfficeInvitation {
     @Column(name = "answered_at")
     private OffsetDateTime answeredAt;
 
-    @Column(name = "proposed_date", nullable = false)
+    @Column(name = "proposed_date")
     private LocalDate proposedDate;
+
+    @PrePersist
+    public void prePersist() {
+        this.createdAt = OffsetDateTime.now();
+    }
 }

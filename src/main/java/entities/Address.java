@@ -1,5 +1,6 @@
 package entities;
 
+import entities.enums.AddressType;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -38,7 +39,3 @@ public class Address {
     private Locality locality;
 }
 
-enum AddressType {
-    DE_DOMICILIU,
-    DE_OFICIU
-}
