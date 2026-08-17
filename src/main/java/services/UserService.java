@@ -102,10 +102,14 @@ public class UserService {
             Boolean favorite,
             int page,
             int size) {
+
+        // Fetch currentUser once, outside the stream
+        User currentUser = findById(currentUserId);
+
         List<ColleagueResponse> filtered = userRepository.findAll()
                 .stream()
                 .filter(u -> !u.getId().equals(currentUserId))
-                .map(u -> toColleagueResponse(currentUserId, u))
+                .map(u -> toColleagueResponse(currentUser, u))
                 .filter(response -> Filter.matchesSearch(response, search))
                 .filter(response -> Filter.matchesStatus(response, status))
                 .filter(response -> Filter.matchesFloor(response, floor))
@@ -134,11 +138,11 @@ public class UserService {
         );
     }
 
-    public ColleagueResponse toColleagueResponse(Integer userId, User colleague) {
-        List<User> listOfFavorites = favoriteColleagueRepository.findFavoriteUsersByUserId(userId);
+    // Overload accepting a pre-fetched currentUser to avoid repeated DB lookups in streams
+    public ColleagueResponse toColleagueResponse(User currentUser, User colleague) {
+        List<User> listOfFavorites = favoriteColleagueRepository.findFavoriteUsersByUserId(currentUser.getId());
         boolean isFavorite = listOfFavorites.contains(colleague);
 
-        User currentUser = findById(userId);
         if (!currentUser.getIsActive()) {
             return ColleagueResponse.fromEntity(colleague, "inactiv",
                     null, isFavorite);
@@ -200,10 +204,9 @@ public class UserService {
                 .orElse(null);
 
         if (activeBooking == null) {
-            location = new String("remote");
-        }
-
-        if (activeBooking.getSeat() == null) {
+            location = "remote";
+        } else if (activeBooking.getSeat() == null) {
+            // NPE fix: was using if/if instead of if/else if, causing NPE when activeBooking is null
             location = String.valueOf(activeBooking.getRoom().getFloor());
         } else {
             location = String.valueOf(activeBooking.getSeat().getRoom().getFloor());

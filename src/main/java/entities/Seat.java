@@ -24,10 +24,6 @@ public class Seat {
     @Column(name = "status", length = 50)
     private String status;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "type")
-    private SeatType type;
-
     @Column(name = "x_position")
     private Integer xPosition;
 

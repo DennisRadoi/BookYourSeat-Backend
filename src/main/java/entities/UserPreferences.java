@@ -23,9 +23,6 @@ public class UserPreferences {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(name = "preferred_floor")
-    String preferedFloor;
-
     @Column(name = "preferred_start_time")
     LocalTime preferredStartTime;
 
@@ -38,8 +35,8 @@ public class UserPreferences {
     @Column(name = "reminder_before_booking", nullable = false)
     Boolean reminderBeforeBooking;
 
-    @Column(name = "preferred_building")
-    String prefreedBuilding;
+    @Column(name = "preferred_building_id")
+    Integer prefreedBuilding;
 
     @Column(name = "near_window", nullable = false)
     Boolean nearWindow;

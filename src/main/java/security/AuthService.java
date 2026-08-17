@@ -1,16 +1,24 @@
 package security;
 
-import org.springframework.security.core.userdetails.User;
+import entities.Address;
+import entities.Department;
+import entities.User;
+import exceptions.EmailAlreadyExistsException;
+import exceptions.ResourceNotFoundException;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import repositories.AddressRepository;
+import repositories.DepartmentRepository;
 import repositories.UserRepository;
 import security.dto.LoginRequest;
 import security.dto.LoginResponse;
-import lombok.RequiredArgsConstructor;
-import org.springframework.security.authentication.*;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.stereotype.Service;
 import security.dto.RegisterRequest;
-import
+
+import java.time.LocalDate;
 
 @Service
 @RequiredArgsConstructor
@@ -19,25 +27,22 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final CustomUserDetailsService userDetailsService;
     private final JwtService jwtService;
+
     private final UserRepository userRepository;
+    private final DepartmentRepository departmentRepository;
+    private final AddressRepository addressRepository;
+
     private final PasswordEncoder passwordEncoder;
 
     public LoginResponse login(LoginRequest request) {
 
         authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        request.email(),
-                        request.password()
-                )
+                new UsernamePasswordAuthenticationToken(request.email(), request.password())
         );
 
-        UserDetails user =
-                userDetailsService.loadUserByUsername(
-                        request.email()
-                );
+        UserDetails userDetails = userDetailsService.loadUserByUsername(request.email());
 
-        String token =
-                jwtService.generateToken(user);
+        String token = jwtService.generateToken(userDetails);
 
         return new LoginResponse(token);
     }
@@ -45,32 +50,40 @@ public class AuthService {
     public LoginResponse register(RegisterRequest request) {
 
         if (userRepository.existsByEmail(request.email())) {
-            throw new RuntimeException("Email already exists");
+            throw new EmailAlreadyExistsException(request.email());
         }
+
+        Department department = departmentRepository.findById(request.departmentId())
+                .orElseThrow(() -> new ResourceNotFoundException("Department", request.departmentId()));
+
+        Address address = addressRepository.findById(request.addressId())
+                .orElseThrow(() -> new ResourceNotFoundException("Address", request.addressId()));
 
         User user = new User();
 
         user.setFirstName(request.firstName());
         user.setLastName(request.lastName());
         user.setEmail(request.email());
+        user.setPhoneNumber(request.phoneNumber());
 
-        user.setPasswordHash(
-                passwordEncoder.encode(request.password())
-        );
+        user.setPasswordHash(passwordEncoder.encode(request.password()));
 
         user.setRole("ROLE_USER");
         user.setIsActive(true);
 
+        user.setProfilePhoto("default.png");
+
+        user.setEmploymentDate(LocalDate.now());
+
+        user.setDepartment(department);
+        user.setAddress(address);
+
         userRepository.save(user);
 
-        UserDetails userDetails =
-                userDetailsService.loadUserByUsername(
-                        user.getEmail()
-                );
+        UserDetails userDetails = userDetailsService.loadUserByUsername(user.getEmail());
 
-        String token =
-                jwtService.generateToken(userDetails);
+        String token = jwtService.generateToken(userDetails);
 
         return new LoginResponse(token);
     }
-}
+}
