@@ -3,6 +3,7 @@ package security;
 import entities.Address;
 import entities.Department;
 import entities.User;
+import entities.UserPreferences;
 import exceptions.EmailAlreadyExistsException;
 import exceptions.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -11,8 +12,10 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import repositories.AddressRepository;
 import repositories.DepartmentRepository;
+import repositories.UserPreferencesRepository;
 import repositories.UserRepository;
 import security.dto.LoginRequest;
 import security.dto.LoginResponse;
@@ -29,6 +32,7 @@ public class AuthService {
     private final JwtService jwtService;
 
     private final UserRepository userRepository;
+    private final UserPreferencesRepository userPreferencesRepository;
     private final DepartmentRepository departmentRepository;
     private final AddressRepository addressRepository;
 
@@ -47,6 +51,7 @@ public class AuthService {
         return new LoginResponse(token);
     }
 
+    @Transactional
     public LoginResponse register(RegisterRequest request) {
 
         if (userRepository.existsByEmail(request.email())) {
@@ -79,6 +84,14 @@ public class AuthService {
         user.setAddress(address);
 
         userRepository.save(user);
+
+        UserPreferences preferences = new UserPreferences();
+        preferences.setUser(user);
+        preferences.setBookingConfirmationOnEmail(false);
+        preferences.setReminderBeforeBooking(false);
+        preferences.setNearWindow(false);
+        preferences.setQuietPlace(false);
+        userPreferencesRepository.save(preferences);
 
         UserDetails userDetails = userDetailsService.loadUserByUsername(user.getEmail());
 

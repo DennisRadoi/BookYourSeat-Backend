@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Random;
 
 public class Utils {
-    public static String getRandomFavoriteColleage(List<User> list) {
+    public static String getRandomFavoriteColleague(List<User> list) {
         int index = new Random().nextInt(list.size());
 
         User colleague = list.get(index);
@@ -46,10 +46,10 @@ public class Utils {
 
             boolean currentDay = false;
             String currentDayOfWeek = String.valueOf(today.getDayOfWeek().getValue());
-            String[] cureentRecurringDaysOfWeek = recurring.getDaysOfWeek()
+            String[] currentRecurringDaysOfWeek = recurring.getDaysOfWeek()
                     .split(",");
 
-            for (String day : cureentRecurringDaysOfWeek) {
+            for (String day : currentRecurringDaysOfWeek) {
                 if (day.equals(currentDayOfWeek)) {
                     currentDay = true;
                 }

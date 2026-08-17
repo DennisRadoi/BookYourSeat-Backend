@@ -1,8 +1,8 @@
 package entities;
 
+import entities.enums.SeatStatus;
 import jakarta.persistence.*;
 import lombok.*;
-
 
 @Entity
 @Table(name = "seat")
@@ -10,7 +10,6 @@ import lombok.*;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-
 public class Seat {
 
     @Id
@@ -21,8 +20,9 @@ public class Seat {
     @JoinColumn(name = "room_id", nullable = false)
     private Room room;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 50)
-    private String status;
+    private SeatStatus status;
 
     @Column(name = "x_position")
     private Integer xPosition;
