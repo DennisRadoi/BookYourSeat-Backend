@@ -1,8 +1,8 @@
 package entities;
 
+import entities.enums.SeatStatus;
 import jakarta.persistence.*;
 import lombok.*;
-import entities.enums.SeatType;
 
 @Entity
 @Table(name = "seat")
@@ -21,12 +21,12 @@ public class Seat {
     @JoinColumn(name = "room_id", nullable = false)
     private Room room;
 
-    @Column(name = "status", length = 50)
-    private String status;
+//    @Column(name = "status", length = 50)
+//    private String status;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "type")
-    private SeatType type;
+    @Column(name = "status")
+    private SeatStatus status;
 
     @Column(name = "x_position")
     private Integer xPosition;

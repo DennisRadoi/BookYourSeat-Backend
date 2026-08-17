@@ -30,7 +30,7 @@ public class securityConfig {
                                 "/auth/**"
                         ).permitAll()
 
-                        .anyRequest().authenticated()
+                        .anyRequest().permitAll()
                 )
                 .httpBasic(Customizer.withDefaults());
 
