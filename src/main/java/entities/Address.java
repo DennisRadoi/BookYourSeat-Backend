@@ -40,5 +40,5 @@ public class Address {
 
 enum AddressType {
     DE_DOMICILIU,
-    DE_OFICIU;
+    DE_OFICIU
 }

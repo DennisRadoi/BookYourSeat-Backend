@@ -25,10 +25,10 @@ public class User {
     @Column(name = "email", nullable = false, unique = true)
     private String email;
 
-    @Column(name = "phone_number", nullable = false, length = 10)
+    @Column(name = "phone_number", nullable = false, length = 10, columnDefinition = "CHAR(10)")
     private String phoneNumber;
 
-    @Column(name = "profile_photo", nullable = false)
+    @Column(name = "profile_photo")
     private String profilePhoto;
 
     @Column(name = "password_hash", nullable = false)

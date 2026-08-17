@@ -1,7 +1,7 @@
 package services;
 
 import entities.Seat;
-import entities.enums.SeatType;
+import entities.enums.SeatStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import repositories.BookingRepository;
@@ -30,11 +30,11 @@ public class SeatService {
         return seatRepository.findByRoomId(roomId);
     }
 
-    public List<Seat> searchAvailableSeats(String type, Boolean nearWindow, Boolean hasMonitor,
+    public List<Seat> searchAvailableSeats(String status, Boolean nearWindow, Boolean hasMonitor,
                                            Boolean hasStandupDesk, LocalDate date, LocalTime startTime,
                                            LocalTime endTime) {
-        SeatType seatType = parseSeatType(type);
-        List<Seat> seats = seatRepository.findWithFilters(seatType, nearWindow, hasMonitor, hasStandupDesk);
+        SeatStatus seatStatus = parseSeatStatus(status);
+        List<Seat> seats = seatRepository.findWithFilters(seatStatus, nearWindow, hasMonitor, hasStandupDesk);
         if (date == null || startTime == null || endTime == null) {
             return seats;
         }
@@ -45,14 +45,14 @@ public class SeatService {
                 .collect(Collectors.toList());
     }
 
-    private SeatType parseSeatType(String type) {
-        if (type == null || type.isBlank()) {
+    private SeatStatus parseSeatStatus(String status) {
+        if (status == null || status.isBlank()) {
             return null;
         }
         try {
-            return SeatType.valueOf(type);
+            return SeatStatus.valueOf(status);
         } catch (IllegalArgumentException ex) {
-            throw new IllegalArgumentException("Tip de loc necunoscut: " + type);
+            throw new IllegalArgumentException("Tip de loc necunoscut: " + status);
         }
     }
 }

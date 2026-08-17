@@ -35,8 +35,9 @@ public class UserPreferences {
     @Column(name = "reminder_before_booking", nullable = false)
     Boolean reminderBeforeBooking;
 
-    @Column(name = "preferred_building_id")
-    Integer prefreedBuilding;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "preferred_building_id")
+    private Building preferredBuilding;
 
     @Column(name = "near_window", nullable = false)
     Boolean nearWindow;

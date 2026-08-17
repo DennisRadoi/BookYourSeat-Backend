@@ -1,7 +1,6 @@
 package dto;
 
 import entities.Seat;
-import entities.enums.SeatType;
 
 public record GetSeatResponse(
         Integer id,

@@ -19,7 +19,6 @@ public interface SeatRepository extends JpaRepository<Seat, Integer> {
             "(:hasMonitor IS NULL OR s.hasMonitor = :hasMonitor) AND " +
             "(:hasStandupDesk IS NULL OR s.hasStandupDesk = :hasStandupDesk)")
     List<Seat> findWithFilters(
-            @Param("type") SeatType type,
             @Param("nearWindow") Boolean nearWindow,
             @Param("hasMonitor") Boolean hasMonitor,
             @Param("hasStandupDesk") Boolean hasStandupDesk

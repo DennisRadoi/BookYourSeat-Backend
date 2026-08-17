@@ -18,25 +18,35 @@ public class FavoriteColleagueService {
     }
 
     @Transactional
-    public void removeFavorite(Integer favoriteId, Integer currentUserId) {
-        favoriteColleagueRepository.deleteByUserIdAndFavoriteColleagueId(currentUserId, favoriteId);
+    public boolean removeFavorite(Integer favoriteId, Integer currentUserId) {
+        if (favoriteColleagueRepository.existsByUserIdAndFavoriteColleagueId(currentUserId, favoriteId)) {
+            favoriteColleagueRepository.deleteByUserIdAndFavoriteColleagueId(currentUserId, favoriteId);
+            return true;
+        }
+        return false;
     }
 
-    public void addFavorite(Integer favoriteId, Integer currentUserId) {
+    @Transactional
+    public boolean addFavorite(Integer favoriteId, Integer currentUserId) {
         if (currentUserId.equals(favoriteId)) {
-            throw new RuntimeException("Nu poti sa te adaugi la favoriti");
-        }
-        if (favoriteColleagueRepository.existsByUserIdAndFavoriteColleagueId(favoriteId, currentUserId)) {
-            return;
+            throw new RuntimeException("You can't add yourself to favorites.");
         }
 
-        User currentUser = userRepository.findById(currentUserId).orElse(null);
-        User favoriteUser =  userRepository.findById(favoriteId).orElse(null);
+        if (favoriteColleagueRepository.existsByUserIdAndFavoriteColleagueId(currentUserId, favoriteId)) {
+            return false;
+        }
+
+        User currentUser = userRepository.findById(currentUserId)
+                .orElseThrow(() -> new RuntimeException("Current user does not exist"));
+        User favoriteUser =  userRepository.findById(favoriteId)
+                .orElseThrow(() -> new RuntimeException("Favorite user does not exist"));
 
         FavoriteColleague favoriteColleague = new FavoriteColleague();
         favoriteColleague.setUser(currentUser);
         favoriteColleague.setFavoriteColleague(favoriteUser);
         favoriteColleagueRepository.save(favoriteColleague);
+
+        return true;
     }
 
 }

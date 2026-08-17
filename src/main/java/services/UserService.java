@@ -1,19 +1,19 @@
 package services;
 
 import dto.*;
-import entities.Booking;
-import entities.User;
+import entities.*;
+import entities.enums.AddressType;
 import entities.enums.BookingStatus;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import repositories.BookingRepository;
-import repositories.FavoriteColleagueRepository;
-import repositories.UserRepository;
+import repositories.*;
 import utils.Filter;
 import utils.Utils;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -23,6 +23,11 @@ public class UserService {
     private final UserRepository userRepository;
     private final FavoriteColleagueRepository favoriteColleagueRepository;
     private final BookingRepository bookingRepository;
+    private final DepartmentRepository departmentRepository;
+    private final AddressRepository addressRepository;
+    private final CountyRepository countyRepository;
+    private final LocalityRepository localityRepository;
+    private final BuildingRepository buildingRepository;
 
     public User findById(Integer id) {
         return userRepository.findById(id)
@@ -102,14 +107,10 @@ public class UserService {
             Boolean favorite,
             int page,
             int size) {
-
-        // Fetch currentUser once, outside the stream
-        User currentUser = findById(currentUserId);
-
         List<ColleagueResponse> filtered = userRepository.findAll()
                 .stream()
                 .filter(u -> !u.getId().equals(currentUserId))
-                .map(u -> toColleagueResponse(currentUser, u))
+                .map(u -> toColleagueResponse(currentUserId, u))
                 .filter(response -> Filter.matchesSearch(response, search))
                 .filter(response -> Filter.matchesStatus(response, status))
                 .filter(response -> Filter.matchesFloor(response, floor))
@@ -138,12 +139,12 @@ public class UserService {
         );
     }
 
-    // Overload accepting a pre-fetched currentUser to avoid repeated DB lookups in streams
-    public ColleagueResponse toColleagueResponse(User currentUser, User colleague) {
-        List<User> listOfFavorites = favoriteColleagueRepository.findFavoriteUsersByUserId(currentUser.getId());
+    public ColleagueResponse toColleagueResponse(Integer userId, User colleague) {
+        List<User> listOfFavorites = favoriteColleagueRepository.findFavoriteUsersByUserId(userId);
         boolean isFavorite = listOfFavorites.contains(colleague);
 
-        if (!currentUser.getIsActive()) {
+        User currentUser = findById(userId);
+        if (!colleague.getIsActive()) {
             return ColleagueResponse.fromEntity(colleague, "inactiv",
                     null, isFavorite);
         }
@@ -161,8 +162,7 @@ public class UserService {
                     colleague, "remote", null, isFavorite
             );
         }
-
-        if (activeBooking.getSeat() == null) {
+        else if (activeBooking.getSeat() == null) {
             return ColleagueResponse.fromEntity(
                     colleague, "la birou", String.valueOf(activeBooking.getRoom().getFloor()), isFavorite
             );
@@ -204,9 +204,9 @@ public class UserService {
                 .orElse(null);
 
         if (activeBooking == null) {
-            location = "remote";
-        } else if (activeBooking.getSeat() == null) {
-            // NPE fix: was using if/if instead of if/else if, causing NPE when activeBooking is null
+            location = new String("remote");
+        }
+        else if (activeBooking.getSeat() == null) {
             location = String.valueOf(activeBooking.getRoom().getFloor());
         } else {
             location = String.valueOf(activeBooking.getSeat().getRoom().getFloor());
@@ -224,5 +224,199 @@ public class UserService {
     public MySettingsResponse toMySettingsResponse(Integer userId) {
         User currentUser = findById(userId);
         return MySettingsResponse.fromEntity(currentUser);
+    }
+
+    @Transactional
+    public MyAccountResponse updateProfile(Integer currentUserId,
+                                           UpdateMyAccountRequest request) {
+        User user = findById(currentUserId);
+
+        UpdateMyAdressRequest updateMyAdressRequest = request.updateMyAdressRequest();
+        updateAdress(user, updateMyAdressRequest);
+
+        if (request.fullname() != null) {
+            String[] name = request.fullname().split(" ");
+            user.setFirstName(name[0]);
+            user.setLastName(name[1]);
+        }
+        if (request.phoneNumber() != null) {
+            if (request.phoneNumber().length() != 10) {
+                throw new RuntimeException("Phone number size is invalid.");
+            }
+            user.setPhoneNumber(request.phoneNumber());
+        }
+        if (request.email() != null) {
+            if (userRepository.existsByEmailAndIdNot(request.email(), currentUserId)) {
+                throw new RuntimeException("Email address already in use.");
+            }
+            user.setEmail(request.email());
+        }
+        if (request.profilePhoto() != null) {
+            user.setProfilePhoto(request.profilePhoto());
+        }
+
+        if (request.departmentName() != null) {
+            Department department = departmentRepository
+                    .findByName(request.departmentName())
+                    .orElseThrow(() -> new RuntimeException(
+                            "Departamentul nu exista."
+                    ));
+            user.setDepartment(department);
+        }
+        userRepository.save(user);
+
+        List<User> list = favoriteColleagueRepository.findFavoriteUsersByUserId(user.getId());
+        String preferredColleague = list.isEmpty()
+                ? null
+                : Utils.getRandomFavoriteColleage(list);
+
+        return MyAccountResponse.fromEntity(
+                user,
+                preferredColleague
+        );
+    }
+
+    private void updateAdress(User u, UpdateMyAdressRequest request) {
+        if (request == null) {
+            return;
+        }
+        Address adress = u.getAddress();
+        Address newAddress = new Address();
+
+        if (request.street() != null) {
+            newAddress.setStreet(request.street());
+        } else {
+            newAddress.setStreet(adress.getStreet());
+        }
+        if (request.number() != null) {
+            newAddress.setNumber(request.number());
+        } else {
+            newAddress.setNumber(adress.getNumber());
+        }
+        if (request.apartmentBlock() != null) {
+            newAddress.setApartmentBlock(request.apartmentBlock());
+        } else {
+            newAddress.setApartmentBlock(adress.getApartmentBlock());
+        }
+        if (request.postalCode() != null) {
+            newAddress.setPostalCode(request.postalCode());
+        } else {
+            newAddress.setPostalCode(adress.getPostalCode());
+        }
+        if (request.floor() != null) {
+            newAddress.setFloor(request.floor());
+        } else {
+            newAddress.setFloor(adress.getFloor());
+        }
+        if (request.county() != null && request.locality() == null) {
+            throw new RuntimeException("If you u want to modify the county, you have to provide the locality too");
+        }
+        Locality locality = adress.getLocality();
+        if (request.locality() != null) {
+            County county;
+            if (request.county() != null) {
+                county = countyRepository.findByName(request.county()).orElse(null);
+                if (county == null) {
+                    county = new County();
+                    county.setName(request.county());
+                    countyRepository.save(county);
+                }
+            }
+            else {
+                county = adress.getLocality().getCounty();
+            }
+            locality = localityRepository.findByNameAndCountyName(request.locality(),
+                            county.getName())
+                    .orElse(null);
+            if (locality == null) {
+                locality = new Locality();
+                locality.setName(request.locality());
+                locality.setCounty(county);
+                localityRepository.save(locality);
+            }
+        }
+        newAddress.setLocality(locality);
+        newAddress.setType(AddressType.DE_DOMICILIU);
+        addressRepository.save(newAddress);
+        u.setAddress(newAddress);
+    }
+
+    @Transactional // transactional face update-ul in SQL chiar daca am modificat doar obiectul in Java prin dirty checking
+    public MyAccountResponse updateAccountPagePreferences(Integer currentUserId,
+                                             UpdateAccountPreferencesRequest request) {
+        if (request == null) {
+            throw new RuntimeException("Request is null.");
+        }
+        User u = findById(currentUserId);
+        UserPreferences userPreferences = u.getUserPreferences();
+
+        if (request.nearWindow() != null) {
+            userPreferences.setNearWindow(request.nearWindow());
+        }
+        if (request.quietPlaces() != null) {
+            userPreferences.setQuietPlace(request.quietPlaces());
+        }
+        List<User> list = favoriteColleagueRepository.findFavoriteUsersByUserId(u.getId());
+        String preferredColleague = list.isEmpty()
+                ? null
+                : Utils.getRandomFavoriteColleage(list);
+        return MyAccountResponse.fromEntity(u, preferredColleague);
+    }
+
+    @Transactional
+    public MySettingsResponse updateSettings(Integer currentUserId,
+                                             UpdateSettingsPreferencesRequest request) {
+        if (request == null) {
+            throw new RuntimeException("Request is null.");
+        }
+        User u = findById(currentUserId);
+        UserPreferences userPreferences = u.getUserPreferences();
+        if (request.reminderBeforeBooking() != null) {
+            userPreferences.setReminderBeforeBooking(request.reminderBeforeBooking());
+        }
+        if (request.receivesNotificationOnEmail() != null) {
+            userPreferences.setBookingConfirmationOnEmail(request.receivesNotificationOnEmail());
+        }
+        if (request.daysOfWeek() != null) {
+            String daysOfWeek = "";
+            if (request.daysOfWeek().contains("MONDAY")) {
+                daysOfWeek = daysOfWeek + "1";
+            }
+            if (request.daysOfWeek().contains("TUESDAY")) {
+                daysOfWeek = daysOfWeek + ",2";
+            }
+            if (request.daysOfWeek().contains("WEDNESDAY")) {
+                daysOfWeek = daysOfWeek + ",3";
+            }
+            if (request.daysOfWeek().contains("THURSDAY")) {
+                daysOfWeek = daysOfWeek + ",4";
+            }
+            if (request.daysOfWeek().contains("FRIDAY")) {
+                daysOfWeek = daysOfWeek + ",5";
+            }
+            userPreferences.setDaysOfWeek(daysOfWeek);
+        }
+        if (request.preferredEndTime() != null) {
+            userPreferences.setPreferredEndTime(LocalTime.parse(request.preferredEndTime()));
+        }
+        if (request.preferredStartTime() != null) {
+            userPreferences.setPreferredStartTime(LocalTime.parse(request.preferredStartTime()));
+        }
+        if (request.preferredBuilding() != null) {
+            if (buildingRepository.existsByName(request.preferredBuilding())) {
+                userPreferences.setPreferredBuilding(buildingRepository.findByName(request.preferredBuilding()).orElse(null));
+            }
+            else {
+                throw new RuntimeException("The building " + request.preferredBuilding() + " doesn't exist.");
+            }
+        }
+        return MySettingsResponse.fromEntity(u);
+    }
+
+    public List<ColleagueResponse> getListOfFavorites(Integer currentUserId) {
+        List<User> favorites = favoriteColleagueRepository.findFavoriteUsersByUserId(currentUserId);
+        return favorites.stream()
+                .map(colleague -> toColleagueResponse(currentUserId, colleague))
+                .toList();
     }
 }

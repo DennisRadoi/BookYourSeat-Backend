@@ -2,7 +2,7 @@ package entities;
 
 import jakarta.persistence.*;
 import lombok.*;
-import entities.enums.SeatType;
+
 
 @Entity
 @Table(name = "seat")
