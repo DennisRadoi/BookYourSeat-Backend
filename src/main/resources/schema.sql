@@ -64,21 +64,8 @@ CREATE TABLE IF NOT EXISTS OFFICE_INVITATION(
                                                 CONSTRAINT chk_office_invite CHECK(user_id <> addressee_id)
 );
 
-CREATE TABLE IF NOT EXISTS USER_PREFERENCES(
-                    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-                    user_id INT REFERENCES USERS(id),
-                                               preferred_floor VARCHAR(255),
-                                               preferred_seat_type VARCHAR(255),
-                                               preferred_start_time TIME,
-                                               preferred_end_time TIME,
-                                               recieves_notification_on_email BOOLEAN DEFAULT TRUE,
-                                               preferred_building VARCHAR(255),
-                                               near_window BOOLEAN NOT NULL,
-                                               quiet_place BOOLEAN NOT NULL,
-                                               days_of_week VARCHAR(255),
-                                                reminder_before_booking BOOLEAN NOT NULL,
-                                                booking_confirmation_on_email BOOLEAN NOT NULL
-);
+
+
 
 CREATE TABLE IF NOT EXISTS BUILDING(
                                        id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -157,3 +144,16 @@ CREATE TABLE IF NOT EXISTS USER_NOTIFICATION(
                                                 has_been_read BOOLEAN,
                                                 notification_id INT REFERENCES NOTIFICATION(id)
 );
+
+CREATE TABLE IF NOT EXISTS USER_PREFERENCES(
+                                               id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+                                               user_id INT REFERENCES USERS(id),
+                                               preferred_start_time TIME,
+                                               preferred_end_time TIME,
+                                               recieves_notification_on_email BOOLEAN DEFAULT TRUE,
+                                               preferred_building_id INT REFERENCES BUILDING(id),
+                                               near_window BOOLEAN NOT NULL,
+                                               quiet_place BOOLEAN NOT NULL,
+                                               days_of_week VARCHAR(255),
+                                               reminder_before_booking BOOLEAN NOT NULL,
+                                               booking_confirmation_on_email BOOLEAN NOT NULL);

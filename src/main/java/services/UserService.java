@@ -26,6 +26,7 @@ public class UserService {
     private final AddressRepository addressRepository;
     private final CountyRepository countyRepository;
     private final LocalityRepository localityRepository;
+    private final BuildingRepository buildingRepository;
 
     public User findById(Integer id) {
         return userRepository.findById(id)
@@ -359,5 +360,55 @@ public class UserService {
                 ? null
                 : Utils.getRandomFavoriteColleage(list);
         return MyAccountResponse.fromEntity(u, preferredColleague);
+    }
+
+    @Transactional
+    public MySettingsResponse updateSettings(Integer currentUserId,
+                                             UpdateSettingsPreferencesRequest request) {
+        if (request == null) {
+            throw new RuntimeException("Request is null.");
+        }
+        User u = findById(currentUserId);
+        UserPreferences userPreferences = u.getUserPreferences();
+        if (request.reminderBeforeBooking() != null) {
+            userPreferences.setReminderBeforeBooking(request.reminderBeforeBooking());
+        }
+        if (request.receivesNotificationOnEmail() != null) {
+            userPreferences.setBookingConfirmationOnEmail(request.receivesNotificationOnEmail());
+        }
+        if (request.daysOfWeek() != null) {
+            String daysOfWeek = "";
+            if (request.daysOfWeek().contains("MONDAY")) {
+                daysOfWeek = daysOfWeek + "1";
+            }
+            if (request.daysOfWeek().contains("TUESDAY")) {
+                daysOfWeek = daysOfWeek + ",2";
+            }
+            if (request.daysOfWeek().contains("WEDNESDAY")) {
+                daysOfWeek = daysOfWeek + ",3";
+            }
+            if (request.daysOfWeek().contains("THURSDAY")) {
+                daysOfWeek = daysOfWeek + ",4";
+            }
+            if (request.daysOfWeek().contains("FRIDAY")) {
+                daysOfWeek = daysOfWeek + ",5";
+            }
+            userPreferences.setDaysOfWeek(daysOfWeek);
+        }
+        if (request.preferredEndTime() != null) {
+            userPreferences.setPreferredEndTime(LocalTime.parse(request.preferredEndTime()));
+        }
+        if (request.preferredStartTime() != null) {
+            userPreferences.setPreferredStartTime(LocalTime.parse(request.preferredStartTime()));
+        }
+        if (request.preferredBuilding() != null) {
+            if (buildingRepository.existsByName(request.preferredBuilding())) {
+                userPreferences.setPreferredBuilding(buildingRepository.findByName(request.preferredBuilding()).orElse(null));
+            }
+            else {
+                throw new RuntimeException("The building " + request.preferredBuilding() + " doesn't exist.");
+            }
+        }
+        return MySettingsResponse.fromEntity(u);
     }
 }

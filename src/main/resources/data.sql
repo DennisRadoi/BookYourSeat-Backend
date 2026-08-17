@@ -57,18 +57,6 @@ INSERT INTO OFFICE_INVITATION (user_id, addressee_id, message, proposed_date) VA
                                                                                   (5, 1, 'Hai la sediul T2.', '2026-08-19');
 
 
-INSERT INTO USER_PREFERENCES (
-    user_id, preferred_floor, preferred_seat_type, preferred_start_time,
-    preferred_end_time, recieves_notification_on_email, preferred_building,
-    near_window, quiet_place, days_of_week, reminder_before_booking,
-    booking_confirmation_on_email
-) VALUES
-      (1, 'Parter', 'standard', '09:00', '17:00', TRUE, 'ITSS T1', TRUE, TRUE, '1,2,3,4,5', TRUE, TRUE),
-      (2, 'Etaj 1', 'cu monitor', '10:00', '18:00', TRUE, 'ITSS T1', TRUE, FALSE, '1,3,5', TRUE, TRUE),
-      (3, 'Etaj 2', 'zona linistita', '08:30', '16:30', FALSE, 'ITSS T2', FALSE, TRUE, '2,4', FALSE, TRUE),
-      (4, 'Etaj 1', 'standup desk', '09:30', '17:30', TRUE, 'ITSS T2', TRUE, TRUE, '1,2,3', TRUE, FALSE),
-      (5, 'Parter', 'standard', '08:00', '16:00', TRUE, 'ITSS T1', FALSE, FALSE, '1,2,3,4,5', FALSE, FALSE);
-
 
 INSERT INTO BUILDING (name, address_id) VALUES
                                             ('ITSS T1', 1),
@@ -130,3 +118,15 @@ INSERT INTO USER_NOTIFICATION (user_id, has_been_read, notification_id) VALUES
                                                                             (2, FALSE, 3),
                                                                             (3, FALSE, 4),
                                                                             (4, TRUE, 5);
+
+INSERT INTO USER_PREFERENCES (
+    user_id, preferred_building_id, preferred_start_time,
+    preferred_end_time, recieves_notification_on_email,
+    near_window, quiet_place, days_of_week, reminder_before_booking,
+    booking_confirmation_on_email
+) VALUES
+      (1, 1, '09:00', '17:00', TRUE, TRUE, TRUE, '1,2,3,4,5', TRUE, TRUE),
+      (2, 1, '10:00', '18:00', TRUE, TRUE, FALSE, '1,3,5', TRUE, TRUE),
+      (3, 1, '08:30', '16:30', FALSE, FALSE, TRUE, '2,4', FALSE, TRUE),
+      (4, 1, '09:30', '17:30', TRUE, TRUE, TRUE, '1,2,3', TRUE, FALSE),
+      (5, 1, '08:00', '16:00', TRUE, FALSE, FALSE, '1,2,3,4,5', FALSE, FALSE);

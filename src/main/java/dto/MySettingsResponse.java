@@ -3,7 +3,7 @@ package dto;
 import entities.User;
 import entities.UserPreferences;
 
-public record MySettingsResponse(boolean quietPlace, boolean nearWindow, String preferedFloor,
+public record MySettingsResponse(String preferedFloor,
                                  String daysOfWeek,
                                  String preferredStartTime,
                                  String preferredEndTime,
@@ -12,9 +12,7 @@ public record MySettingsResponse(boolean quietPlace, boolean nearWindow, String 
     public static MySettingsResponse fromEntity(User user) {
         UserPreferences preferinte = user.getUserPreferences();
         return new MySettingsResponse(
-                preferinte == null ? null : preferinte.getQuietPlace(),
-                preferinte == null ? null : preferinte.getNearWindow(),
-                preferinte == null ? null : preferinte.getPreferedFloor(),
+                preferinte == null ? null : preferinte.getPreferredBuilding().getName(),
                 preferinte == null ? null : preferinte.getDaysOfWeek(),
                 preferinte == null ? null : String.valueOf(preferinte.getPreferredStartTime()),
                 preferinte == null ? null : String.valueOf(preferinte.getPreferredEndTime()),

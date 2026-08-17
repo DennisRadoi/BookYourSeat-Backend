@@ -81,9 +81,14 @@ public class UserController {
         return userService.updateProfile(currentUserId, request);
     }
 
-    @PatchMapping("/me/preferences")
+    @PatchMapping("/me/preferences") // e ok
     public MyAccountResponse updateAccountPreferences(@RequestParam Integer currentUserId,
                                                       @Validated @RequestBody UpdateAccountPreferencesRequest request) {
         return userService.updateAccountPagePreferences(currentUserId, request);
+    }
+    @PatchMapping("me/settings/preferences") // e ok
+    public MySettingsResponse updateSettingsPreferences(@RequestParam Integer currentUserId,
+                                                       @Validated @RequestBody UpdateSettingsPreferencesRequest request) {
+        return userService.updateSettings(currentUserId, request);
     }
 }
