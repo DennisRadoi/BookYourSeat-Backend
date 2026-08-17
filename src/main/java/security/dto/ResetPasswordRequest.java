@@ -1,4 +1,4 @@
-package dto.auth;
+package security.dto;
 
 public record ResetPasswordRequest(
         String token,
