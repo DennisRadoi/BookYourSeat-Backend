@@ -3,6 +3,7 @@ package services;
 import dto.*;
 import entities.*;
 import entities.enums.BookingStatus;
+import entities.enums.InvitationStatus;
 import exceptions.EmailAlreadyExistsException;
 import exceptions.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +31,9 @@ public class UserService {
     private final CountyRepository countyRepository;
     private final LocalityRepository localityRepository;
     private final BuildingRepository buildingRepository;
+    private final OfficeInvitationRepository officeInvitationRepository;
+    private final NotificationRepository notificationRepostiory;
+    private final UserNotificationRepository userNotificationRepository;
 
     public User findById(Integer id) {
         return userRepository.findById(id)
@@ -405,5 +409,70 @@ public class UserService {
         return favorites.stream()
                 .map(colleague -> toColleagueResponse(currentUserId, colleague))
                 .toList();
+    }
+
+    @Transactional
+    public InvitationResponse createInvitation(Integer currentUserId,
+                                               CreateInvitationRequest request, Integer addresseId) {
+        User u = findById(currentUserId);
+        User addresse = findById(addresseId);
+
+        if (u.getId().equals(addresse.getId())) {
+            throw new RuntimeException("Can't send an invitation to yourself.");
+        }
+
+        OfficeInvitation officeInvitation = new OfficeInvitation();
+        officeInvitation.setUser(u);
+        officeInvitation.setAddressee(addresse);
+        officeInvitation.setMessage(request.message());
+        officeInvitation.setProposedDate(request.proposedDate());
+        officeInvitationRepository.save(officeInvitation);
+
+        Notification notification = new Notification();
+        notification.setUser(u);
+        notification.setType("invitatie");
+        String message = "";
+        notification.setMessage(
+                u.getFirstName() + " " + u.getLastName() + " te-a invitat la birou pe " + request.proposedDate() + ".");
+        notificationRepostiory.save(notification);
+
+        UserNotification userNotification = new UserNotification();
+        userNotification.setUser(addresse);
+        userNotification.setNotification(notification);
+        userNotificationRepository.save(userNotification);
+
+        return InvitationResponse.fromEntity(officeInvitation);
+    }
+
+    @Transactional // transactional face update-ul in SQL chiar daca am modificat doar obiectul in Java prin dirty checking
+    public InvitationResponse updateInvitationStatus(AnswerInvitationRequest request,
+                                                     Integer currentUserId,
+                                                     Integer invitationId) {
+        OfficeInvitation invitation = officeInvitationRepository.findById(invitationId).orElseThrow(() -> new ResourceNotFoundException("Invitation", -1));
+        User addressee = invitation.getAddressee();
+        User sender = invitation.getUser();
+
+        // exceptii
+
+        invitation.setStatus(request.invitationStatus());
+        String responseText = request.invitationStatus() == InvitationStatus.ACCEPTED ? "a acceptat invitatia ta."
+                : "a refuzat invitatia ta.";
+
+        Notification notification = new Notification();
+        notification.setUser(addressee);
+        notification.setType("invite_response");
+        notification.setMessage(
+                addressee.getFirstName() + " " + addressee.getLastName()
+                        + " " + responseText
+        );
+        notification.setOfficeInvitation(invitation);
+        notificationRepostiory.save(notification);
+
+        UserNotification userNotification = new UserNotification();
+        userNotification.setUser(sender);
+        userNotification.setNotification(notification);
+        userNotificationRepository.save(userNotification);
+
+        return InvitationResponse.fromEntity(invitation);
     }
 }

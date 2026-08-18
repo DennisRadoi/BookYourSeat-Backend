@@ -35,5 +35,12 @@ public class Notification {
     @JoinColumn(name = "booking_id")
     private Booking booking;
 
+    @PrePersist
+    public void prePersist() {
+        this.createdAt = OffsetDateTime.now();
+    }
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "office_invitation_id")
+    private OfficeInvitation officeInvitation;
 }

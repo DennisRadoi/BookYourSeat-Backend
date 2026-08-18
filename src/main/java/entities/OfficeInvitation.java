@@ -1,5 +1,6 @@
 package entities;
 
+import entities.enums.InvitationStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -37,6 +38,20 @@ public class OfficeInvitation {
     @Column(name = "answered_at")
     private OffsetDateTime answeredAt;
 
-    @Column(name = "proposed_date", nullable = false)
+    @Column(name = "proposed_date")
     private LocalDate proposedDate;
+
+    @PrePersist
+    public void prePersist() {
+        this.createdAt = OffsetDateTime.now();
+    }
+
+    @PostUpdate
+    public void postUpdate() {
+        this.answeredAt = OffsetDateTime.now();
+    }
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status")
+    private InvitationStatus status;
 }
