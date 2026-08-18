@@ -1,5 +1,7 @@
 package controllers;
 
+import entities.User;
+import lombok.RequiredArgsConstructor;
 import services.BookingService;
 import dto.CreateBookingRequest;
 import dto.UpdateBookingRequest;
@@ -9,18 +11,18 @@ import dto.GetRecurringBookingResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import services.UserService;
 
 import java.util.List;
 import java.util.Map;
 
 @RestController
+@RequestMapping("/api")
+@RequiredArgsConstructor
 public class BookingController {
 
     private final BookingService bookingService;
-
-    public BookingController(BookingService bookingService) {
-        this.bookingService = bookingService;
-    }
+    private final UserService userService;
 
     @GetMapping("/bookings/me")
     public ResponseEntity<List<GetBookingResponse>> getMyBookings(
@@ -36,7 +38,8 @@ public class BookingController {
 
     @PostMapping("/bookings")
     public ResponseEntity<GetBookingResponse> createBooking(@RequestBody CreateBookingRequest request) {
-        return new ResponseEntity<>(bookingService.createBookingDTO(request), HttpStatus.CREATED);
+        User u = userService.getCurrentUser();
+        return new ResponseEntity<>(bookingService.createBookingDTO(request, u.getId()), HttpStatus.CREATED);
     }
 
     @PutMapping("/bookings/{id}")

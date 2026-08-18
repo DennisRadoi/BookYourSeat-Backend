@@ -49,8 +49,8 @@ public class BookingService {
         return GetBookingResponse.fromEntity(getBookingById(id));
     }
 
-    public GetBookingResponse createBookingDTO(CreateBookingRequest request) {
-        Booking created = createBooking(request);
+    public GetBookingResponse createBookingDTO(CreateBookingRequest request, Integer currentUserId) {
+        Booking created = createBooking(request, currentUserId);
         return GetBookingResponse.fromEntity(created);
     }
 
@@ -86,12 +86,12 @@ public class BookingService {
                 .orElseThrow(() -> new IllegalArgumentException("Booking not found: " + id));
     }
 
-    public Booking createBooking(CreateBookingRequest request) {
-        if (request.userId() == null) {
-            throw new IllegalArgumentException("userId este obligatoriu");
-        }
+    public Booking createBooking(CreateBookingRequest request, Integer currentUserId) {
+//        if (request.userId() == null) {
+//            throw new IllegalArgumentException("userId este obligatoriu");
+//        }
 
-        User user = userRepository.findById(request.userId())
+        User user = userRepository.findById(currentUserId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found: " + request.userId()));
 
         Booking booking = new Booking();

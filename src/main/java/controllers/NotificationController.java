@@ -1,29 +1,30 @@
 package controllers;
 
 
+import entities.User;
+import lombok.RequiredArgsConstructor;
 import services.NotificationService;
 import dto.GetNotificationResponse;
 //import entities.UserNotification;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import services.UserService;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/users/me/notifications")
+@RequiredArgsConstructor
 public class NotificationController {
 
     private final NotificationService notificationService;
-
-    public NotificationController(NotificationService notificationService) {
-        this.notificationService = notificationService;
-    }
+    private final UserService userService;
 
     @GetMapping
     public ResponseEntity<List<GetNotificationResponse>> getNotifications(
-            @RequestParam(name = "userId") Integer userId,
             @RequestParam(name = "isRead", required = false) Boolean isRead) {
-        return ResponseEntity.ok(notificationService.getUserNotifications(userId, isRead));
+        User u = userService.getCurrentUser();
+        return ResponseEntity.ok(notificationService.getUserNotifications(u.getId(), isRead));
     }
 
     @PutMapping("/{id}/read")
