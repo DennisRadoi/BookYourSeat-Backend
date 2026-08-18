@@ -8,7 +8,9 @@ import entities.enums.InvitationStatus;
 import exceptions.EmailAlreadyExistsException;
 import exceptions.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import repositories.*;
@@ -36,6 +38,7 @@ public class UserService {
     private final OfficeInvitationRepository officeInvitationRepository;
     private final NotificationRepository notificationRepostiory;
     private final UserNotificationRepository userNotificationRepository;
+    private final PasswordEncoder passwordEncoder;
 
     public User findById(Integer id) {
         return userRepository.findById(id)
@@ -499,5 +502,28 @@ public class UserService {
                 .stream()
                 .map(InvitationResponse::fromEntity)
                 .toList();
+    }
+
+    public void changePassword(ChangePasswordRequest request, Integer currentUserId) {
+        User u = findById(currentUserId);
+
+        if (!passwordEncoder.matches(
+                request.currentPassword(),
+                u.getPasswordHash()
+        )) {
+            throw new BadCredentialsException("The password you typed does not match with your current password.");
+        }
+
+        if (passwordEncoder.matches(
+                request.newPassword(),
+                u.getPasswordHash()
+        )) {
+            throw new BadCredentialsException(
+                    "New password must be different from current password."
+            );
+        }
+
+        u.setPasswordHash(passwordEncoder.encode(request.newPassword()));
+        userRepository.save(u);
     }
 }
