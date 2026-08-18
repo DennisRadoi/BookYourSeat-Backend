@@ -17,4 +17,8 @@ public interface OfficeInvitationRepository extends JpaRepository<OfficeInvitati
     Optional<OfficeInvitation> findByAddresseeIdAndProposedDate(Integer a, LocalDate proposedDate);
 
     boolean existsByUserIdAndAddresseeIdAndProposedDate(Integer userId, Integer addresseId, LocalDate proposedDate);
+
+    List<OfficeInvitation> findAllByUserIdOrAddresseeIdOrderByCreatedAtDesc(Integer currentUserId,
+                                                                            Integer addresseeId);
+
 }
