@@ -104,4 +104,15 @@ public class UserController {
         Integer currentUserId = userService.getCurrentUser().getId();
         return userService.getListOfFavorites(currentUserId);
     }
+
+    @PostMapping("/{colleagueId}/office-invitation")
+    public ResponseEntity<InvitationResponse> createInvitation(
+            @PathVariable Integer colleagueId,
+            @Validated @RequestBody CreateInvitationRequest request
+    )
+    {
+        User u = userService.getCurrentUser();
+        InvitationResponse response = userService.createInvitation(u.getId(), request, colleagueId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
 }
