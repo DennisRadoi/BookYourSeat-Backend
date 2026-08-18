@@ -115,4 +115,13 @@ public class UserController {
         InvitationResponse response = userService.createInvitation(u.getId(), request, colleagueId);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
+
+    @PatchMapping("/me/change-password")
+    public ResponseEntity<String> changePassword(
+            @Validated @RequestBody ChangePasswordRequest request
+    ) {
+        Integer currentUserId = userService.getCurrentUser().getId();
+        userService.changePassword(request, currentUserId);
+        return ResponseEntity.ok().body("Password has been modified.");
+    }
 }
