@@ -54,8 +54,8 @@ public class BookingService {
         return GetBookingResponse.fromEntity(created);
     }
 
-    public GetBookingResponse updateBookingDTO(Integer id, UpdateBookingRequest request) {
-        Booking updated = updateBooking(id, request);
+    public GetBookingResponse updateBookingDTO(Integer id, UpdateBookingRequest request, Integer currentUserId) {
+        Booking updated = updateBooking(id, request, currentUserId);
         return GetBookingResponse.fromEntity(updated);
     }
 
@@ -63,8 +63,8 @@ public class BookingService {
         return GetRecurringBookingResponse.fromEntity(getRecurringBookingById(id));
     }
 
-    public GetRecurringBookingResponse updateRecurringBookingDTO(Integer id, UpdateRecurringBookingRequest request) {
-        RecurringBooking updated = updateRecurringBooking(id, request);
+    public GetRecurringBookingResponse updateRecurringBookingDTO(Integer id, UpdateRecurringBookingRequest request, Integer currentUserId) {
+        RecurringBooking updated = updateRecurringBooking(id, request, currentUserId);
         return GetRecurringBookingResponse.fromEntity(updated);
     }
 
@@ -92,7 +92,7 @@ public class BookingService {
 //        }
 
         User user = userRepository.findById(currentUserId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found: " + request.userId()));
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + currentUserId));
 
         Booking booking = new Booking();
         booking.setUser(user);
@@ -131,8 +131,12 @@ public class BookingService {
         return bookingRepository.save(booking);
     }
 
-    public Booking updateBooking(Integer id, UpdateBookingRequest request) {
+    public Booking updateBooking(Integer id, UpdateBookingRequest request, Integer currentUserId) {
         Booking existing = getBookingById(id);
+
+        if (existing.getUser() == null || !existing.getUser().getId().equals(currentUserId)) {
+            throw new IllegalArgumentException("User not allowed to modify booking: " + currentUserId);
+        }
 
         existing.setStartDate(request.startDate());
         existing.setEndDate(request.endDate());
@@ -160,8 +164,11 @@ public class BookingService {
         return bookingRepository.save(existing);
     }
 
-    public Map<String, String> cancelBooking(Integer id) {
+    public Map<String, String> cancelBooking(Integer id, Integer currentUserId) {
         Booking booking = getBookingById(id);
+        if (booking.getUser() == null || !booking.getUser().getId().equals(currentUserId)) {
+            throw new IllegalArgumentException("User not allowed to cancel booking: " + currentUserId);
+        }
         booking.setStatus(BookingStatus.ANULATA);
         bookingRepository.save(booking);
         Map<String, String> resp = new HashMap<>();
@@ -174,8 +181,11 @@ public class BookingService {
                 .orElseThrow(() -> new IllegalArgumentException("Recurring booking not found: " + id));
     }
 
-    public RecurringBooking updateRecurringBooking(Integer id, UpdateRecurringBookingRequest request) {
+    public RecurringBooking updateRecurringBooking(Integer id, UpdateRecurringBookingRequest request, Integer currentUserId) {
         RecurringBooking existing = getRecurringBookingById(id);
+        if (existing.getBooking() == null || existing.getBooking().getUser() == null || !existing.getBooking().getUser().getId().equals(currentUserId)) {
+            throw new IllegalArgumentException("User not allowed to modify recurring booking: " + currentUserId);
+        }
         existing.setFrequency(request.frequency());
         existing.setDaysOfWeek(request.daysOfWeek());
         existing.setIntervalOfRecurrence(request.intervalOfRecurrence());
@@ -184,9 +194,12 @@ public class BookingService {
 
     // in modelul actual, o "serie" recurenta = un singur Booking legat 1-1 de RecurringBooking
     // (aceeasi cheie primara), asa ca anularea seriei inseamna anularea acelui booking
-    public Map<String, String> cancelRecurringBookingSeries(Integer id) {
+    public Map<String, String> cancelRecurringBookingSeries(Integer id, Integer currentUserId) {
         List<Booking> series = bookingRepository.findByRecurringBookingId(id);
         for (Booking b : series) {
+            if (b.getUser() == null || !b.getUser().getId().equals(currentUserId)) {
+                throw new IllegalArgumentException("User not allowed to cancel recurring series: " + currentUserId);
+            }
             b.setStatus(BookingStatus.ANULATA);
         }
         bookingRepository.saveAll(series);

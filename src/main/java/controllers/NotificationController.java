@@ -28,17 +28,16 @@ public class NotificationController {
     }
 
     @PutMapping("/{id}/read")
-    public ResponseEntity<Void> markAsRead(
-            @RequestParam(name = "userId") Integer userId,
-            @PathVariable Integer id) {
-        notificationService.markNotificationAsRead(userId, id);
+    public ResponseEntity<Void> markAsRead(@PathVariable Integer id) {
+        User u = userService.getCurrentUser();
+        notificationService.markNotificationAsRead(u.getId(), id);
         return ResponseEntity.ok().build();
     }
 
     @PutMapping("/read-all")
-    public ResponseEntity<Void> markAllAsRead(
-            @RequestParam(name = "userId") Integer userId) {
-        notificationService.markAllNotificationsAsRead(userId);
+    public ResponseEntity<Void> markAllAsRead() {
+        User u = userService.getCurrentUser();
+        notificationService.markAllNotificationsAsRead(u.getId());
         return ResponseEntity.ok().build();
     }
 }
