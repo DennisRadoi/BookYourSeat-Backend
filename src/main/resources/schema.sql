@@ -157,3 +157,9 @@ CREATE TABLE IF NOT EXISTS USER_PREFERENCES(
                                                days_of_week VARCHAR(255),
                                                reminder_before_booking BOOLEAN NOT NULL,
                                                booking_confirmation_on_email BOOLEAN NOT NULL);
+
+ALTER TABLE notification
+ADD COLUMN office_invitation_id INT REFERENCES office_invitation(id);
+
+ALTER TABLE office_invitation
+ADD COLUMN status VARCHAR(255) CHECK (status IN('IN_ASTEPTARE', 'ACCEPTATA', 'REFUZA'));
