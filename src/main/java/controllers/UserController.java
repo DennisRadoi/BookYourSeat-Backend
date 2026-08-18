@@ -52,7 +52,7 @@ public class UserController {
         return userService.toColleagueProfileResponse(colleagueId, currentUserId);
     }
 
-    @PutMapping("/me/favorites/{colleagueId}")
+    @PostMapping("/me/favorites/{colleagueId}")
     public ResponseEntity<String> addFavorite(@PathVariable Integer colleagueId) {
         Integer userId = userService.getCurrentUser().getId();
         boolean created = favoriteColleagueService.addFavorite(colleagueId, userId);

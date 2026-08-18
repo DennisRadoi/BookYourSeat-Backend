@@ -44,6 +44,7 @@ public class OfficeInvitation {
     @PrePersist
     public void prePersist() {
         this.createdAt = OffsetDateTime.now();
+        this.status = InvitationStatus.IN_ASTEPTARE;
     }
 
     @PostUpdate
