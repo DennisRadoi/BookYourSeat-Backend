@@ -524,5 +524,6 @@ public class UserService {
         }
 
         u.setPasswordHash(passwordEncoder.encode(request.newPassword()));
+        userRepository.save(u);
     }
 }
