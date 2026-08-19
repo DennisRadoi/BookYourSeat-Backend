@@ -20,6 +20,7 @@ import repositories.SeatRepository;
 import repositories.UserRepository;
 
 import org.springframework.transaction.annotation.Transactional;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -152,22 +153,31 @@ public class BookingService {
         existing.setStartTime(request.startTime());
         existing.setEndTime(request.endTime());
 
-        existing.setRoom(request.roomId() != null
-                ? roomRepository.findById(request.roomId())
-                        .orElseThrow(() -> new IllegalArgumentException("Room not found: " + request.roomId()))
-                : null);
-        existing.setSeat(request.seatId() != null
-                ? seatRepository.findById(request.seatId())
-                        .orElseThrow(() -> new IllegalArgumentException("Seat not found: " + request.seatId()))
-                : null);
-
-        if (request.status() != null) {
-            existing.setStatus(request.status());
+        // The edit modal updates only the values that changed (usually date
+        // and time). Keep the originally reserved room and seat when those
+        // fields are absent from the request.
+        if (request.roomId() != null) {
+            existing.setRoom(roomRepository.findById(request.roomId())
+                    .orElseThrow(() -> new IllegalArgumentException("Room not found: " + request.roomId())));
+        }
+        if (request.seatId() != null) {
+            existing.setSeat(seatRepository.findById(request.seatId())
+                    .orElseThrow(() -> new IllegalArgumentException("Seat not found: " + request.seatId())));
         }
 
         validateBookingInterval(existing);
         if (existing.getSeat() != null) {
             checkSeatAvailability(existing, existing.getId());
+        }
+
+        if (request.status() != null) {
+            if (request.status() == BookingStatus.FINALIZATA) {
+                LocalDateTime reservationEnd = LocalDateTime.of(existing.getEndDate(), existing.getEndTime());
+                if (!LocalDateTime.now().isAfter(reservationEnd)) {
+                    throw new IllegalStateException("Rezervarea poate fi finalizată numai după ora de încheiere.");
+                }
+            }
+            existing.setStatus(request.status());
         }
 
         Map<String, Object> updateVars = new HashMap<>();

@@ -27,4 +27,9 @@ public class Filter {
         return favorite == null
                 || response.isFavorite() == favorite;
     }
+
+    public static boolean matchesBuilding(ColleagueResponse response, String building) {
+        return building == null || building.isBlank()
+                || (response.building() != null && response.building().equalsIgnoreCase(building));
+    }
 }

@@ -6,5 +6,7 @@ public record UpdateMyAccountRequest(String fullname,
                                      String profilePhoto,
                                      String phoneNumber,
                                      String departmentName,
+                                     String role,
+                                     String employmentDate,
                                      UpdateMyAdressRequest updateMyAdressRequest) {
 }

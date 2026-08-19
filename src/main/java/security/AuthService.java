@@ -4,6 +4,7 @@ import entities.Address;
 import entities.Department;
 import entities.User;
 import entities.UserPreferences;
+import entities.enums.AddressType;
 import exceptions.EmailAlreadyExistsException;
 import exceptions.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -58,18 +59,33 @@ public class AuthService {
             throw new EmailAlreadyExistsException(request.email());
         }
 
-        Department department = departmentRepository.findById(request.departmentId())
-                .orElseThrow(() -> new ResourceNotFoundException("Department", request.departmentId()));
-
-        Address address = addressRepository.findById(request.addressId())
-                .orElseThrow(() -> new ResourceNotFoundException("Address", request.addressId()));
+//        Department department = request.departmentId() == null
+//                ? departmentRepository.findAll().stream().findFirst()
+//                    .orElseThrow(() -> new IllegalStateException("No department is configured."))
+//                : departmentRepository.findById(request.departmentId())
+//                    .orElseThrow(() -> new ResourceNotFoundException("Department", request.departmentId()));
+        Department department = departmentRepository.findAll().stream().findFirst()
+                .orElseThrow(() -> new IllegalStateException("No department is configured."));
+//        Address address = request.addressId() == null
+//                ? addressRepository.findAll().stream().findFirst()
+//                    .orElseThrow(() -> new IllegalStateException("No address is configured."))
+//                : addressRepository.findById(request.addressId())
+//                    .orElseThrow(() -> new ResourceNotFoundException("Address", request.addressId()));
+        Address address = new Address();
+        address.setType(AddressType.DE_DOMICILIU);
+        address.setNumber("");
+        address.setStreet("");
+        address.setPostalCode("");
+        addressRepository.save(address);
 
         User user = new User();
 
         user.setFirstName(request.firstName());
         user.setLastName(request.lastName());
         user.setEmail(request.email());
-        user.setPhoneNumber(request.phoneNumber());
+        user.setPhoneNumber(request.phoneNumber() == null || request.phoneNumber().isBlank()
+                ? null
+                : request.phoneNumber());
 
         user.setPasswordHash(passwordEncoder.encode(request.password()));
 
@@ -99,4 +115,4 @@ public class AuthService {
 
         return new LoginResponse(token);
     }
-}
+}
