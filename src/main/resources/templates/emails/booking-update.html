@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"/></head>
+<body style="font-family: Arial, sans-serif; background-color: #f8fafc; padding: 20px;">
+<div style="max-width: 500px; background: white; padding: 24px; border-radius: 8px; border: 1px solid #e2e8f0; margin: 0 auto;">
+    <h2 style="color: #0f172a;">Salut, <span th:text="${userName}"></span>! </h2>
+    <p style="color: #475569;">Rezervarea ta a fost modificată cu succes. Noile detalii sunt:</p>
+    <ul style="color: #334155; background-color: #fef9c3; padding: 16px; border-radius: 6px; list-style-type: none;">
+        <li style="margin-bottom: 8px;"> <strong>Data:</strong> <span th:text="${startDate}"></span></li>
+        <li style="margin-bottom: 8px;"> <strong>Ora de începere:</strong> <span th:text="${startTime}"></span></li>
+        <li> <strong>Locație:</strong> <span th:text="${location}"></span></li>
+    </ul>
+    <p style="color: #475569; margin-top: 20px;">O zi productivă îți dorim!</p>
+</div>
+</body>
+</html>
