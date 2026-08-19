@@ -10,10 +10,12 @@ import org.springframework.web.bind.annotation.RestController;
 import services.AnalyticsService;
 
 @RestController
-@RequiredArgsConstructor
 @RequestMapping("/analytics")
+@RequiredArgsConstructor
 public class AnalyticsController {
+
     private final AnalyticsService analyticsService;
+
     @GetMapping("/bookings/total")
     public ResponseEntity<AnalyticsBookingsResponse> getTotalBookings(
             @RequestParam int year,

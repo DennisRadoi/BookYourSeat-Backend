@@ -439,6 +439,7 @@ public class UserService {
         Notification notification = new Notification();
         notification.setUser(u);
         notification.setType("invitatie");
+        notification.setOfficeInvitation(officeInvitation);
         String message = "";
         notification.setMessage(
                 u.getFirstName() + " " + u.getLastName() + " te-a invitat la birou pe " + request.proposedDate() + ".");
