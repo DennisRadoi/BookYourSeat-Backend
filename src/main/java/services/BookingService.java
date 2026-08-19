@@ -37,6 +37,7 @@ public class BookingService {
     private final UserRepository userRepository;
     private final RoomRepository roomRepository;
     private final SeatRepository seatRepository;
+    private final EmailService emailService;
 
     // DTO mapping methods — perform mapping inside transactional service to avoid LazyInitializationException
     public java.util.List<GetBookingResponse> getUserBookingsDTO(Integer userId, String status) {
@@ -128,6 +129,14 @@ public class BookingService {
             booking.setRecurringBooking(recurringBooking);
         }
 
+        Map<String, Object> vars = new HashMap<>();
+        vars.put("userName", user.getFirstName());
+        vars.put("startDate", booking.getStartDate().toString());
+        vars.put("startTime", booking.getStartTime().toString());
+        vars.put("location", booking.getSeat() != null ? "Locul #" + booking.getSeat().getId() : booking.getRoom().getName());
+
+        emailService.sendEmail(user.getEmail(), "Confirmare Rezervare Birou", "booking-confirmation", vars);
+
         return bookingRepository.save(booking);
     }
 
@@ -161,6 +170,14 @@ public class BookingService {
             checkSeatAvailability(existing, existing.getId());
         }
 
+        Map<String, Object> updateVars = new HashMap<>();
+        updateVars.put("userName", existing.getUser().getFirstName());
+        updateVars.put("startDate", existing.getStartDate().toString());
+        updateVars.put("startTime", existing.getStartTime().toString());
+        updateVars.put("location", existing.getSeat() != null ? "Locul #" + existing.getSeat().getId() : existing.getRoom().getName());
+
+        emailService.sendEmail(existing.getUser().getEmail(), "Modificare Rezervare Birou", "booking-update", updateVars);
+
         return bookingRepository.save(existing);
     }
 
@@ -173,6 +190,14 @@ public class BookingService {
         bookingRepository.save(booking);
         Map<String, String> resp = new HashMap<>();
         resp.put("status", "ok");
+
+        Map<String, Object> cancelVars = new HashMap<>();
+        cancelVars.put("userName", booking.getUser().getFirstName());
+        cancelVars.put("startDate", booking.getStartDate().toString());
+        cancelVars.put("location", booking.getSeat() != null ? "Locul #" + booking.getSeat().getId() : booking.getRoom().getName());
+
+        emailService.sendEmail(booking.getUser().getEmail(), "Anulare Rezervare Birou", "booking-cancellation", cancelVars);
+
         return resp;
     }
 

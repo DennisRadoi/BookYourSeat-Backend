@@ -57,4 +57,13 @@ public interface BookingRepository extends JpaRepository<Booking, Integer> {
             @Param("endTime") LocalTime endTime,
             @Param("excludeBookingId") Integer excludeBookingId
     );
+
+    //cautam in baza de date rezervarile pentru a trimite alerta de 30min
+    @Query("SELECT b FROM Booking b WHERE b.status <> entities.enums.BookingStatus.ANULATA " +
+            "AND b.startDate = :date " +
+            "AND b.startTime = :time")
+    List<Booking> findUpcomingBookingsStartingAt(
+            @Param("date") LocalDate date,
+            @Param("time") LocalTime time
+    );
 }

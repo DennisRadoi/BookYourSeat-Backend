@@ -21,7 +21,9 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -39,6 +41,7 @@ public class UserService {
     private final NotificationRepository notificationRepostiory;
     private final UserNotificationRepository userNotificationRepository;
     private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
 
     public User findById(Integer id) {
         return userRepository.findById(id)
@@ -445,6 +448,19 @@ public class UserService {
         userNotification.setUser(addresse);
         userNotification.setNotification(notification);
         userNotificationRepository.save(userNotification);
+
+        Map<String, Object> vars = new HashMap<>();
+        vars.put("senderName", u.getFirstName() + " " + u.getLastName());
+        vars.put("addresseeName", addresse.getFirstName());
+        vars.put("proposedDate", request.proposedDate().toString());
+        vars.put("message", request.message());
+
+        emailService.sendEmail(
+                addresse.getEmail(),
+                "Invitație la birou de la " + u.getFirstName(),
+                "office-invitation",
+                vars
+        );
 
         return InvitationResponse.fromEntity(officeInvitation);
     }
