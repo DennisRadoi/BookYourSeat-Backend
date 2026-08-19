@@ -65,5 +65,9 @@ public interface BookingRepository extends JpaRepository<Booking, Integer> {
     List<Booking> findUpcomingBookingsStartingAt(
             @Param("date") LocalDate date,
             @Param("time") LocalTime time
+    List<Booking> findByStartDateLessThanAndEndDateGreaterThanEqualAndStatusNot(
+            LocalDate nextMonthStart,
+            LocalDate monthStart,
+            BookingStatus status
     );
 }
