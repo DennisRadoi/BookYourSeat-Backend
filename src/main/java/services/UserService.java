@@ -1,5 +1,6 @@
 package services;
 
+import controllers.InvitationController;
 import dto.*;
 import entities.*;
 import entities.enums.BookingStatus;
@@ -7,7 +8,9 @@ import entities.enums.InvitationStatus;
 import exceptions.EmailAlreadyExistsException;
 import exceptions.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import repositories.*;
@@ -16,6 +19,7 @@ import utils.Utils;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -34,6 +38,7 @@ public class UserService {
     private final OfficeInvitationRepository officeInvitationRepository;
     private final NotificationRepository notificationRepostiory;
     private final UserNotificationRepository userNotificationRepository;
+    private final PasswordEncoder passwordEncoder;
 
     public User findById(Integer id) {
         return userRepository.findById(id)
@@ -448,31 +453,77 @@ public class UserService {
     public InvitationResponse updateInvitationStatus(AnswerInvitationRequest request,
                                                      Integer currentUserId,
                                                      Integer invitationId) {
-        OfficeInvitation invitation = officeInvitationRepository.findById(invitationId).orElseThrow(() -> new ResourceNotFoundException("Invitation", -1));
+        OfficeInvitation invitation = officeInvitationRepository.findById(invitationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Invitation", invitationId));
         User addressee = invitation.getAddressee();
         User sender = invitation.getUser();
 
-        // exceptii
+        if (invitation.getStatus() != InvitationStatus.IN_ASTEPTARE
+                || invitation.getAnsweredAt() != null) {
+            throw new IllegalStateException(
+                    "Invitation has already been answered."
+            );
+        }
 
-        invitation.setStatus(request.invitationStatus());
-        String responseText = request.invitationStatus() == InvitationStatus.ACCEPTED ? "a acceptat invitatia ta."
-                : "a refuzat invitatia ta.";
+        if (request.invitationStatus() != InvitationStatus.ACCEPTATA
+                && request.invitationStatus() != InvitationStatus.REFUZATA) {
+            throw new IllegalArgumentException(
+                    "You can only accept or refuse the invitation."
+            );
+        }
 
-        Notification notification = new Notification();
-        notification.setUser(addressee);
-        notification.setType("invite_response");
-        notification.setMessage(
-                addressee.getFirstName() + " " + addressee.getLastName()
-                        + " " + responseText
-        );
-        notification.setOfficeInvitation(invitation);
-        notificationRepostiory.save(notification);
+            invitation.setStatus(request.invitationStatus());
+            invitation.setAnsweredAt(OffsetDateTime.now());
+            String responseText = request.invitationStatus() == InvitationStatus.ACCEPTATA ? "a acceptat invitatia ta."
+                    : "a refuzat invitatia ta.";
 
-        UserNotification userNotification = new UserNotification();
-        userNotification.setUser(sender);
-        userNotification.setNotification(notification);
-        userNotificationRepository.save(userNotification);
+            Notification notification = new Notification();
+            notification.setUser(addressee);
+            notification.setType("invite_response");
+            notification.setMessage(
+                    addressee.getFirstName() + " " + addressee.getLastName()
+                            + " " + responseText
+            );
+            notification.setOfficeInvitation(invitation);
+            notificationRepostiory.save(notification);
 
-        return InvitationResponse.fromEntity(invitation);
+            UserNotification userNotification = new UserNotification();
+            userNotification.setUser(sender);
+            userNotification.setNotification(notification);
+            userNotificationRepository.save(userNotification);
+
+            return InvitationResponse.fromEntity(invitation);
+    }
+
+
+    public List<InvitationResponse> getInvitations(Integer currentUserId) {
+        return officeInvitationRepository
+                .findAllByUserIdOrAddresseeIdOrderByCreatedAtDesc(currentUserId, currentUserId)
+                .stream()
+                .map(InvitationResponse::fromEntity)
+                .toList();
+    }
+
+    public void changePassword(ChangePasswordRequest request, Integer currentUserId) {
+        User u = findById(currentUserId);
+
+        if (!passwordEncoder.matches(
+                request.currentPassword(),
+                u.getPasswordHash()
+        )) {
+            throw new BadCredentialsException("The password you typed does not match with your current password.");
+        }
+
+        if (passwordEncoder.matches(
+                request.newPassword(),
+                u.getPasswordHash()
+        )) {
+            throw new BadCredentialsException(
+                    "New password must be different from current password."
+            );
+        }
+
+        u.setPasswordHash(passwordEncoder.encode(request.newPassword()));
+        userRepository.save(u);
     }
 }

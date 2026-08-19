@@ -163,3 +163,5 @@ ADD COLUMN office_invitation_id INT REFERENCES office_invitation(id);
 
 ALTER TABLE office_invitation
 ADD COLUMN status VARCHAR(255) CHECK (status IN('IN_ASTEPTARE', 'ACCEPTATA', 'REFUZA'));
+
+ALTER TABLE seat ADD COLUMN code VARCHAR(255); 

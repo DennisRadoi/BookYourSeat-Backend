@@ -1,5 +1,5 @@
 package entities.enums;
 
 public enum InvitationStatus {
-    PENDING, ACCEPTED, REFUSED
+    IN_ASTEPTARE, REFUZATA, ACCEPTATA
 }

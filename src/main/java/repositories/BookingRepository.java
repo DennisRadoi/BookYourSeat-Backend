@@ -57,4 +57,9 @@ public interface BookingRepository extends JpaRepository<Booking, Integer> {
             @Param("endTime") LocalTime endTime,
             @Param("excludeBookingId") Integer excludeBookingId
     );
+    List<Booking> findByStartDateLessThanAndEndDateGreaterThanEqualAndStatusNot(
+            LocalDate nextMonthStart,
+            LocalDate monthStart,
+            BookingStatus status
+    );
 }

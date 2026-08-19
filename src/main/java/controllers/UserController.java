@@ -52,7 +52,7 @@ public class UserController {
         return userService.toColleagueProfileResponse(colleagueId, currentUserId);
     }
 
-    @PutMapping("/me/favorites/{colleagueId}")
+    @PostMapping("/me/favorites/{colleagueId}")
     public ResponseEntity<String> addFavorite(@PathVariable Integer colleagueId) {
         Integer userId = userService.getCurrentUser().getId();
         boolean created = favoriteColleagueService.addFavorite(colleagueId, userId);
@@ -114,5 +114,14 @@ public class UserController {
         User u = userService.getCurrentUser();
         InvitationResponse response = userService.createInvitation(u.getId(), request, colleagueId);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @PatchMapping("/me/change-password")
+    public ResponseEntity<String> changePassword(
+            @Validated @RequestBody ChangePasswordRequest request
+    ) {
+        Integer currentUserId = userService.getCurrentUser().getId();
+        userService.changePassword(request, currentUserId);
+        return ResponseEntity.ok().body("Password has been modified.");
     }
 }
