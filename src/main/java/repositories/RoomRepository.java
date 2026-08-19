@@ -19,5 +19,5 @@ public interface RoomRepository extends JpaRepository<Room, Integer> {
     List<Room> findByBuildingIdAndFloor(Integer buildingId, Integer floor);
 
     List<Room> findByBuildingIdAndFloorAndType(Integer buildingId, Integer floor, RoomType type);
-
+    long countByType(RoomType type);
 }

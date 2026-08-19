@@ -6,6 +6,7 @@ import entities.User;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.YearMonth;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Random;
@@ -58,6 +59,16 @@ public class Utils {
                     booking.getStartDate(),
                     today
             );
+            if ("lunar".equalsIgnoreCase(recurring.getFrequency())) {
+                long monthsPassed = ChronoUnit.MONTHS.between(
+                        YearMonth.from(booking.getStartDate()),
+                        YearMonth.from(today)
+                );
+
+                return today.getDayOfMonth() == booking.getStartDate().getDayOfMonth()
+                        && monthsPassed >= 0
+                        && monthsPassed % recurring.getIntervalOfRecurrence() == 0;
+            }
 
             return currentDay
                     && weeksPassed % recurring.getIntervalOfRecurrence() == 0;

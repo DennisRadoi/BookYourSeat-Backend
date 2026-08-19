@@ -1,6 +1,8 @@
 package controllers;
 
 import dto.AnalyticsBookingsResponse;
+import dto.TodayAnalyticsResponse;
+import dto.WeeklyBookingsResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,6 +27,16 @@ public class AnalyticsController {
 
         return ResponseEntity.ok(
                 new AnalyticsBookingsResponse(year, month, total)
+        );
+    }
+    @GetMapping("/today")
+    public ResponseEntity<TodayAnalyticsResponse> getTodayAnalytics() {
+        return ResponseEntity.ok(analyticsService.getTodayAnalytics());
+    }
+    @GetMapping("/bookings/current-week")
+    public ResponseEntity<WeeklyBookingsResponse> getCurrentWeekBookings() {
+        return ResponseEntity.ok(
+                analyticsService.getCurrentWeekBookings()
         );
     }
 }

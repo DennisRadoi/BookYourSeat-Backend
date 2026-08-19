@@ -2,6 +2,7 @@ package repositories;
 
 import entities.Booking;
 import entities.enums.BookingStatus;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -69,5 +70,13 @@ public interface BookingRepository extends JpaRepository<Booking, Integer> {
             LocalDate nextMonthStart,
             LocalDate monthStart,
             BookingStatus status
+    );
+    @EntityGraph(attributePaths = {
+            "user", "room", "seat", "seat.room", "recurringBooking"
+    })
+    List<Booking> findByStatusAndStartDateLessThanEqualAndEndDateGreaterThanEqual(
+            BookingStatus status,
+            LocalDate endDate,
+            LocalDate startDate
     );
 }

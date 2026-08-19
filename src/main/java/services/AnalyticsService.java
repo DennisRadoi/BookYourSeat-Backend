@@ -1,16 +1,28 @@
 package services;
 
+import dto.TodayAnalyticsResponse;
 import entities.Booking;
 import entities.RecurringBooking;
 import entities.enums.BookingStatus;
+import entities.enums.RoomType;
+import entities.enums.SeatStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import repositories.BookingRepository;
+import repositories.RoomRepository;
+import repositories.SeatRepository;
 import repositories.UserRepository;
+import utils.Utils;
+import dto.WeeklyBookingsResponse;
+import dto.WeeklyDayBookingsResponse;
+
+import java.time.temporal.TemporalAdjusters;
+import java.util.ArrayList;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.YearMonth;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
@@ -24,6 +36,8 @@ import java.util.stream.Collectors;
 public class AnalyticsService {
     private final BookingRepository bookingRepository;
     private final UserRepository userRepository;
+    private final RoomRepository roomRepository;
+    private final SeatRepository seatRepository;
 
     @Transactional(readOnly = true)
     public long getTotalBookingsForMonth(int year, int month) {
@@ -212,5 +226,177 @@ public class AnalyticsService {
                     "Zi de recurență necunoscută: " + day
             );
         };
+    }
+    @Transactional(readOnly = true)
+    public TodayAnalyticsResponse getTodayAnalytics() {
+        LocalDate today = LocalDate.now();
+        LocalTime now = LocalTime.now();
+
+        List<Booking> activeBookings = bookingRepository
+                .findByStatusAndStartDateLessThanEqualAndEndDateGreaterThanEqual(
+                        BookingStatus.CONFIRMATA,
+                        today,
+                        today
+                )
+                .stream()
+                .filter(booking -> Utils.isActiveBookingNow(today, now, booking))
+                .toList();
+
+        long occupiedConferenceRooms = activeBookings.stream()
+                .filter(booking -> booking.getRoom() != null)
+                .filter(booking -> booking.getRoom().getType() == RoomType.DE_CONFERINTA)
+                .map(booking -> booking.getRoom().getId())
+                .distinct()
+                .count();
+
+        long totalConferenceRooms = roomRepository
+                .countByType(RoomType.DE_CONFERINTA);
+
+        long occupiedOfficeSeats = activeBookings.stream()
+                .filter(booking -> booking.getSeat() != null)
+                .filter(booking -> booking.getSeat().getRoom().getType() == RoomType.DE_OFICIU)
+                .map(booking -> booking.getSeat().getId())
+                .distinct()
+                .count();
+
+        long totalOfficeSeats = seatRepository
+                .countByRoomTypeAndStatus(
+                        RoomType.DE_OFICIU,
+                        SeatStatus.REZERVABIL
+                );
+
+        long peopleInOffice = activeBookings.stream()
+                .map(booking -> booking.getUser().getId())
+                .distinct()
+                .count();
+
+        long conferencePercent = totalConferenceRooms == 0 ? 0
+                : Math.round(occupiedConferenceRooms * 100.0 / totalConferenceRooms);
+
+        long officePercent = totalOfficeSeats == 0 ? 0
+                : Math.round(occupiedOfficeSeats * 100.0 / totalOfficeSeats);
+
+        return new TodayAnalyticsResponse(
+                conferencePercent,
+                officePercent,
+                peopleInOffice
+        );
+    }
+    @Transactional(readOnly = true)
+    public WeeklyBookingsResponse getCurrentWeekBookings() {
+        LocalDate today = LocalDate.now();
+
+        LocalDate monday = today.with(
+                TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)
+        );
+        LocalDate friday = monday.plusDays(4);
+
+        List<Booking> bookings = bookingRepository
+                .findByStatusAndStartDateLessThanEqualAndEndDateGreaterThanEqual(
+                        BookingStatus.CONFIRMATA,
+                        friday,
+                        monday
+                );
+
+        List<WeeklyDayBookingsResponse> days = new ArrayList<>();
+
+        for (int i = 0; i < 5; i++) {
+            LocalDate date = monday.plusDays(i);
+
+            long officeBookings = bookings.stream()
+                    .filter(booking -> occursOnDate(booking, date))
+                    .filter(this::isOfficeBooking)
+                    .count();
+
+            long conferenceRoomBookings = bookings.stream()
+                    .filter(booking -> occursOnDate(booking, date))
+                    .filter(this::isConferenceRoomBooking)
+                    .count();
+
+            days.add(new WeeklyDayBookingsResponse(
+                    getRomanianDayName(date.getDayOfWeek()),
+                    officeBookings,
+                    conferenceRoomBookings
+            ));
+        }
+
+        return new WeeklyBookingsResponse(monday, friday, days);
+    }
+
+    private boolean occursOnDate(Booking booking, LocalDate date) {
+        if (date.isBefore(booking.getStartDate())
+                || date.isAfter(booking.getEndDate())) {
+            return false;
+        }
+
+        RecurringBooking recurrence = booking.getRecurringBooking();
+
+        // O rezervare normala este activa in perioada startDate–endDate.
+        if (recurrence == null) {
+            return true;
+        }
+
+        String frequency = recurrence.getFrequency()
+                .trim()
+                .toLowerCase(Locale.ROOT);
+
+        int interval = recurrence.getIntervalOfRecurrence() == null
+                ? 1
+                : recurrence.getIntervalOfRecurrence();
+
+        return switch (frequency) {
+            case "zilnic", "daily" ->
+                    ChronoUnit.DAYS.between(booking.getStartDate(), date) % interval == 0;
+
+            case "saptamanal", "săptămânal", "weekly" -> {
+                long weeksFromStart = ChronoUnit.DAYS
+                        .between(booking.getStartDate(), date) / 7;
+
+                boolean isCorrectWeek = weeksFromStart % interval == 0;
+                boolean isSelectedDay = getSelectedDays(recurrence, booking)
+                        .contains(date.getDayOfWeek());
+
+                yield isCorrectWeek && isSelectedDay;
+            }
+
+            case "lunar", "monthly" -> {
+                long monthsFromStart = ChronoUnit.MONTHS.between(
+                        YearMonth.from(booking.getStartDate()),
+                        YearMonth.from(date)
+                );
+
+                int expectedDay = Math.min(
+                        booking.getStartDate().getDayOfMonth(),
+                        YearMonth.from(date).lengthOfMonth()
+                );
+
+                yield monthsFromStart >= 0
+                        && monthsFromStart % interval == 0
+                        && date.getDayOfMonth() == expectedDay;
+            }
+
+            default -> false;
+        };
+    }
+    private String getRomanianDayName(DayOfWeek day) {
+        return switch (day) {
+            case MONDAY -> "Luni";
+            case TUESDAY -> "Marți";
+            case WEDNESDAY -> "Miercuri";
+            case THURSDAY -> "Joi";
+            case FRIDAY -> "Vineri";
+            case SATURDAY -> "Sâmbătă";
+            case SUNDAY -> "Duminică";
+        };
+    }
+    private boolean isOfficeBooking(Booking booking) {
+        return booking.getSeat() != null
+                || (booking.getRoom() != null
+                && booking.getRoom().getType() == RoomType.DE_OFICIU);
+    }
+
+    private boolean isConferenceRoomBooking(Booking booking) {
+        return booking.getRoom() != null
+                && booking.getRoom().getType() == RoomType.DE_CONFERINTA;
     }
 }
