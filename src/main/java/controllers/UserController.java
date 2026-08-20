@@ -47,6 +47,11 @@ public class UserController {
         return userService.getMyAccountResponse(userId);
     }
 
+    @GetMapping("/active-count")
+    public long getActiveColleaguesCount() {
+        return userService.getActiveColleaguesCount(userService.getCurrentUser().getId());
+    }
+
     @GetMapping("/{colleagueId}")
     public ColleagueProfileResponse getColleague(@PathVariable Integer colleagueId) {
         Integer currentUserId = userService.getCurrentUser().getId();

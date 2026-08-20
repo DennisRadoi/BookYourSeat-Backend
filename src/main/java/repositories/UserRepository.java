@@ -19,6 +19,7 @@ public interface UserRepository extends JpaRepository<User, Integer> {
     boolean existsByEmail(String email);
     List<User> findAllByIsActiveTrue();
     List<User> findAllByIsActiveFalse();
+    long countByIsActiveTrue();
     boolean existsByEmailAndIdNot(String email, Integer id);
     @Query("SELECT u FROM User u WHERE u.department.name = :name")
     List<User> findALlByDepartmentName(@Param("name") String name);
