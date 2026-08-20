@@ -12,6 +12,7 @@ public record GetNotificationResponse(
         String type,
         OffsetDateTime createdAt,
         Integer bookingId,
+        Integer officeInvitationId,
         Boolean hasBeenRead
 ) {
     public static GetNotificationResponse fromEntity(UserNotification userNotification) {
@@ -31,6 +32,7 @@ public record GetNotificationResponse(
                 notification != null ? notification.getType() : null,
                 notification != null ? notification.getCreatedAt() : null,
                 notification != null && notification.getBooking() != null ? notification.getBooking().getId() : null,
+                notification != null && notification.getOfficeInvitation() != null ? notification.getOfficeInvitation().getId() : null,
                 userNotification.getHasBeenRead()
         );
     }

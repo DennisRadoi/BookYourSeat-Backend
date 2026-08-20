@@ -9,7 +9,9 @@ import java.time.OffsetDateTime;
 public record InvitationResponse(
         Integer id,
         Integer senderId,
+        String senderName,
         Integer receiverId,
+        String receiverName,
         String message,
         LocalDate proposedDate,
         OffsetDateTime createdAt,
@@ -20,7 +22,9 @@ public record InvitationResponse(
         return new InvitationResponse(
                 invitation.getId(),
                 invitation.getUser().getId(),
+                invitation.getUser().getFirstName() + " " + invitation.getUser().getLastName(),
                 invitation.getAddressee().getId(),
+                invitation.getAddressee().getFirstName() + " " + invitation.getAddressee().getLastName(),
                 invitation.getMessage(),
                 invitation.getProposedDate(),
                 invitation.getCreatedAt(),

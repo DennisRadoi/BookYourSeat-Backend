@@ -20,10 +20,7 @@ import utils.Utils;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -121,10 +118,11 @@ public class UserService {
 
     public PageResponse<ColleagueResponse> getColleagues(
             Integer currentUserId,
-            String search,
-            String status,
-            Integer floor,
-            Boolean favorite,
+              String search,
+              String status,
+              Integer floor,
+              String building,
+              Boolean favorite,
             int page,
             int size) {
         List<ColleagueResponse> filtered = userRepository.findAll()
@@ -133,7 +131,8 @@ public class UserService {
                 .map(u -> toColleagueResponse(currentUserId, u))
                 .filter(response -> Filter.matchesSearch(response, search))
                 .filter(response -> Filter.matchesStatus(response, status))
-                .filter(response -> Filter.matchesFloor(response, floor))
+                  .filter(response -> Filter.matchesFloor(response, floor))
+                  .filter(response -> Filter.matchesBuilding(response, building))
                 .filter(response -> Filter.matchesFavorite(response, favorite))
                 .toList();
 
@@ -166,7 +165,7 @@ public class UserService {
         // Check colleague's active status (not currentUser's)
         if (!colleague.getIsActive()) {
             return ColleagueResponse.fromEntity(colleague, "inactiv",
-                    null, isFavorite);
+                    null, null, isFavorite);
         }
 
         Booking activeBooking = bookingRepository.findByUserIdAndStatus(
@@ -178,18 +177,20 @@ public class UserService {
                 .orElse(null);
 
         if (activeBooking == null) {
-            return ColleagueResponse.fromEntity(
-                    colleague, "remote", null, isFavorite
-            );
-        }
-        else if (activeBooking.getSeat() == null) {
-            return ColleagueResponse.fromEntity(
-                    colleague, "la birou", String.valueOf(activeBooking.getRoom().getFloor()), isFavorite
-            );
-        } else {
-            return ColleagueResponse.fromEntity(
-                    colleague, "la birou", String.valueOf(activeBooking.getSeat().getRoom().getFloor()), isFavorite
-            );
+              return ColleagueResponse.fromEntity(
+                      colleague, "remote", null, null, isFavorite
+              );
+          }
+          else if (activeBooking.getSeat() == null) {
+              return ColleagueResponse.fromEntity(
+                      colleague, "la birou", String.valueOf(activeBooking.getRoom().getFloor()),
+                      activeBooking.getRoom().getBuilding().getName(), activeBooking.getRoom().getName(), isFavorite
+              );
+          } else {
+              return ColleagueResponse.fromEntity(
+                      colleague, "la birou", String.valueOf(activeBooking.getSeat().getRoom().getFloor()),
+                      activeBooking.getSeat().getRoom().getBuilding().getName(), activeBooking.getSeat().getRoom().getName(), isFavorite
+              );
         }
     }
 
@@ -228,10 +229,9 @@ public class UserService {
 
         if (activeBooking == null) {
             location = "remote";
-        } else if (activeBooking.getSeat() == null) {
-            location = String.valueOf(activeBooking.getRoom().getFloor());
         } else {
-            location = String.valueOf(activeBooking.getSeat().getRoom().getFloor());
+            Room room = activeBooking.getSeat() == null ? activeBooking.getRoom() : activeBooking.getSeat().getRoom();
+            location = room.getBuilding().getName() + " · Etaj " + room.getFloor() + " · " + room.getName();
         }
 
         return ColleagueProfileResponse.fromEntity(
@@ -280,14 +280,20 @@ public class UserService {
             user.setProfilePhoto(request.profilePhoto());
         }
 
-        if (request.departmentName() != null) {
+          if (request.departmentName() != null) {
             Department department = departmentRepository
                     .findByName(request.departmentName())
                     .orElseThrow(() -> new RuntimeException(
                             "Departamentul nu exista."
                     ));
-            user.setDepartment(department);
-        }
+              user.setDepartment(department);
+          }
+          if (request.role() != null) {
+              user.setRole(request.role());
+          }
+          if (request.employmentDate() != null) {
+              user.setEmploymentDate(LocalDate.parse(request.employmentDate()));
+          }
         userRepository.save(user);
 
         List<User> list = favoriteColleagueRepository.findFavoriteUsersByUserId(user.getId());
@@ -439,6 +445,7 @@ public class UserService {
         Notification notification = new Notification();
         notification.setUser(u);
         notification.setType("invitatie");
+        notification.setOfficeInvitation(officeInvitation);
         String message = "";
         notification.setMessage(
                 u.getFirstName() + " " + u.getLastName() + " te-a invitat la birou pe " + request.proposedDate() + ".");
@@ -512,10 +519,16 @@ public class UserService {
     }
 
 
-    public List<InvitationResponse> getInvitations(Integer currentUserId) {
+    public List<InvitationResponse> getInvitations(Integer currentUserId, String direction) {
         return officeInvitationRepository
                 .findAllByUserIdOrAddresseeIdOrderByCreatedAtDesc(currentUserId, currentUserId)
                 .stream()
+                .filter(invitation -> switch (direction.toLowerCase(Locale.ROOT)) {
+                    case "all" -> true;
+                    case "sent" -> invitation.getUser().getId().equals(currentUserId);
+                    case "received" -> invitation.getAddressee().getId().equals(currentUserId);
+                    default -> throw new IllegalArgumentException("Direction must be all, sent, or received.");
+                })
                 .map(InvitationResponse::fromEntity)
                 .toList();
     }

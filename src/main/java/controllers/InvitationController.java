@@ -24,10 +24,10 @@ public class InvitationController {
 
     @GetMapping
     public ResponseEntity<List<InvitationResponse>>
-    getInvitations() {
+    getInvitations(@RequestParam(defaultValue = "all") String direction) {
         User u = userService.getCurrentUser();
         return ResponseEntity.status(HttpStatus.OK).body(
-                userService.getInvitations(u.getId())
+                userService.getInvitations(u.getId(), direction)
         );
     }
 

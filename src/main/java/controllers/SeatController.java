@@ -42,9 +42,9 @@ public class SeatController {
             @RequestParam(name = "startTime", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.TIME) LocalTime startTime,
             @RequestParam(name = "endTime", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.TIME) LocalTime endTime) {
 
-        return ResponseEntity.ok(seatService.searchAvailableSeats(type, nearWindow, hasMonitor, hasStandupDesk, date, startTime, endTime)
+        return ResponseEntity.ok(seatService.searchSeatsWithAvailability(type, nearWindow, hasMonitor, hasStandupDesk, date, startTime, endTime)
                 .stream()
-                .map(GetSeatResponse::fromEntity)
+                .map(item -> GetSeatResponse.fromEntity(item.seat(), item.occupiedBy()))
                 .collect(Collectors.toList()));
     }
 }

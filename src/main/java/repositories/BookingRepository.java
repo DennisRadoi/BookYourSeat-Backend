@@ -2,6 +2,7 @@ package repositories;
 
 import entities.Booking;
 import entities.enums.BookingStatus;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -43,6 +44,16 @@ public interface BookingRepository extends JpaRepository<Booking, Integer> {
             @Param("endTime") LocalTime endTime
     );
 
+    @Query("SELECT b FROM Booking b JOIN FETCH b.user WHERE b.seat IS NOT NULL " +
+            "AND b.status <> entities.enums.BookingStatus.ANULATA " +
+            "AND :date BETWEEN b.startDate AND b.endDate " +
+            "AND (:startTime < b.endTime AND :endTime > b.startTime)")
+    List<Booking> findBookedSeatsWithUsersByInterval(
+            @Param("date") LocalDate date,
+            @Param("startTime") LocalTime startTime,
+            @Param("endTime") LocalTime endTime
+    );
+
     // verifica daca acelasi loc are deja o rezervare activa care se suprapune ca perioada de zile si interval orar
     @Query("SELECT COUNT(b) > 0 FROM Booking b WHERE b.seat.id = :seatId " +
             "AND (:excludeBookingId IS NULL OR b.id <> :excludeBookingId) " +
@@ -64,10 +75,18 @@ public interface BookingRepository extends JpaRepository<Booking, Integer> {
             "AND b.startTime = :time")
     List<Booking> findUpcomingBookingsStartingAt(
             @Param("date") LocalDate date,
-            @Param("time") LocalTime time
+            @Param("time") LocalTime time);
     List<Booking> findByStartDateLessThanAndEndDateGreaterThanEqualAndStatusNot(
             LocalDate nextMonthStart,
             LocalDate monthStart,
             BookingStatus status
+    );
+    @EntityGraph(attributePaths = {
+            "user", "room", "seat", "seat.room", "recurringBooking"
+    })
+    List<Booking> findByStatusAndStartDateLessThanEqualAndEndDateGreaterThanEqual(
+            BookingStatus status,
+            LocalDate endDate,
+            LocalDate startDate
     );
 }
