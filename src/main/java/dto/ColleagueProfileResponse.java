@@ -25,8 +25,11 @@ public record ColleagueProfileResponse(
                 user.getFirstName() + " " + user.getLastName(),
                 user.getDepartment() == null ? null : user.getDepartment().getName(),
                 user.getRole(),
-                preferinte == null ? null : preferinte.getQuietPlace(),
-                preferinte == null ? null : preferinte.getNearWindow(),
+                // Răspunsul expune booleans primitive. Pentru colegii care nu
+                // au încă preferințe, `null` ar fi despachetat automat și ar
+                // produce un NullPointerException (profilul nu se mai încărca).
+                preferinte != null && Boolean.TRUE.equals(preferinte.getQuietPlace()),
+                preferinte != null && Boolean.TRUE.equals(preferinte.getNearWindow()),
                 preferedColleague,
                 user.getProfilePhoto(),
                 preferinte == null ? null : String.valueOf(preferinte.getPreferredStartTime()),

@@ -92,6 +92,11 @@ public interface BookingRepository extends JpaRepository<Booking, Integer> {
             LocalDate monthStart,
             BookingStatus status
     );
+    List<Booking> findByStartDateLessThanEqualAndEndDateGreaterThanEqualAndStatusNot(
+            LocalDate endDate,
+            LocalDate startDate,
+            BookingStatus status
+    );
     @EntityGraph(attributePaths = {
             "user", "room", "seat", "seat.room", "recurringBooking"
     })

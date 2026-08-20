@@ -481,8 +481,13 @@ public class UserService {
         User addressee = invitation.getAddressee();
         User sender = invitation.getUser();
 
-        if (invitation.getStatus() != InvitationStatus.IN_ASTEPTARE
-                || invitation.getAnsweredAt() != null) {
+        if (!invitation.getAddressee().getId().equals(currentUserId)) {
+            throw new IllegalArgumentException("Doar destinatarul poate răspunde invitației.");
+        }
+
+        // Statusul este sursa de adevăr. Unele baze de date pot popula
+        // answered_at prin trigger, fără ca invitația să fi fost răspunsă.
+        if (invitation.getStatus() != InvitationStatus.IN_ASTEPTARE) {
             throw new IllegalStateException(
                     "Invitation has already been answered."
             );
@@ -506,6 +511,7 @@ public class UserService {
             notification.setMessage(
                     addressee.getFirstName() + " " + addressee.getLastName()
                             + " " + responseText
+                            + " Invitația era pentru data de " + invitation.getProposedDate() + "."
             );
             notification.setOfficeInvitation(invitation);
             notificationRepostiory.save(notification);
