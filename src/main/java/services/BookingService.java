@@ -115,7 +115,12 @@ public class BookingService {
         }
 
         validateBookingInterval(booking);
-        if (booking.getSeat() != null) {
+        if (booking.getRoom() != null && booking.getSeat() == null) {
+            if (bookingRepository.existsOverlappingBookingInRoom(
+                    booking.getRoom().getId(), booking.getStartDate(), booking.getStartTime(), booking.getEndTime())) {
+                throw new IllegalStateException("Sala are deja cel puțin un loc rezervat în acest interval.");
+            }
+        } else if (booking.getSeat() != null) {
             checkSeatAvailability(booking, null);
         }
 

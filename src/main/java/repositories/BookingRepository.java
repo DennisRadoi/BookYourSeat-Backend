@@ -44,6 +44,17 @@ public interface BookingRepository extends JpaRepository<Booking, Integer> {
             @Param("endTime") LocalTime endTime
     );
 
+    @Query("SELECT COUNT(b) > 0 FROM Booking b WHERE b.status <> entities.enums.BookingStatus.ANULATA " +
+            "AND (:date BETWEEN b.startDate AND b.endDate) " +
+            "AND (:startTime < b.endTime AND :endTime > b.startTime) " +
+            "AND (b.room.id = :roomId OR b.seat.room.id = :roomId)")
+    boolean existsOverlappingBookingInRoom(
+            @Param("roomId") Integer roomId,
+            @Param("date") LocalDate date,
+            @Param("startTime") LocalTime startTime,
+            @Param("endTime") LocalTime endTime
+    );
+
     @Query("SELECT b FROM Booking b JOIN FETCH b.user WHERE b.seat IS NOT NULL " +
             "AND b.status <> entities.enums.BookingStatus.ANULATA " +
             "AND :date BETWEEN b.startDate AND b.endDate " +
