@@ -42,7 +42,9 @@ CREATE TABLE IF NOT EXISTS USERS(
                                     employment_date DATE,
                                     is_active BOOLEAN DEFAULT TRUE,
                                     password_hash VARCHAR(255) NOT NULL,
-                                    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+                                    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+                                    reset_token VARCHAR(255),
+                                    reset_token_expiry TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS FAVORITE_COLLEAGUE(

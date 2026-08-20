@@ -1,5 +1,6 @@
 package services;
 
+import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -34,9 +35,7 @@ public class EmailService {
             helper.setText(htmlContent, true);
 
             mailSender.send(mimeMessage);
-        } catch (Exception e) {
-            // JavaMailSender may also throw runtime MailException instances.
-            // Log every delivery failure so it can be diagnosed from the server log.
+        } catch (MessagingException e) {
             System.err.println("Eroare la trimiterea email-ului catre " + to + ": " + e.getMessage());
         }
     }

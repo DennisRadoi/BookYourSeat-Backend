@@ -5,9 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import security.AuthService;
-import security.dto.LoginRequest;
-import security.dto.LoginResponse;
-import security.dto.RegisterRequest;
+import security.dto.*;
 
 @Slf4j
 @RestController
@@ -32,4 +30,16 @@ public class AuthController {
     ) {
         return authService.login(request);
     }
-}
+
+    @PostMapping("/forgot-password")
+    @ResponseStatus(HttpStatus.OK)
+    public void forgotPassword(@RequestBody ForgotPasswordRequest request) {
+        authService.forgotPassword(request);
+    }
+
+    @PostMapping("/reset-password")
+    @ResponseStatus(HttpStatus.OK)
+    public void resetPassword(@RequestBody ResetPasswordRequest request) {
+        authService.resetPassword(request);
+    }
+}
