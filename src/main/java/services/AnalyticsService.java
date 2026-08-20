@@ -296,40 +296,34 @@ public class AnalyticsService {
                         BookingStatus.ANULATA
                 );
 
-        long totalOfficeSeats = seatRepository
-                .countByRoomTypeAndStatus(RoomType.DE_OFICIU, SeatStatus.REZERVABIL);
-
-        Map<Integer, Set<Integer>> seatsByUser = bookingsInMonth.stream()
-                .filter(booking -> booking.getSeat() != null)
-                .filter(booking -> booking.getSeat().getRoom() != null)
-                .filter(booking -> booking.getSeat().getRoom().getType() == RoomType.DE_OFICIU)
-                .filter(booking -> booking.getStartDate().isBefore(monthEnd.plusDays(1))
-                        && booking.getEndDate().isAfter(monthStart.minusDays(1)))
+        Map<Integer, Long> bookingsByUser = bookingsInMonth.stream()
                 .collect(Collectors.groupingBy(
                         booking -> booking.getUser().getId(),
-                        Collectors.mapping(booking -> booking.getSeat().getId(), Collectors.toSet())
+                        Collectors.summingLong(booking -> countOccurrencesInMonth(booking, monthStart, monthEnd))
                 ));
+        long totalBookings = bookingsByUser.values().stream().mapToLong(Long::longValue).sum();
 
-        return seatsByUser.entrySet().stream()
+        return bookingsByUser.entrySet().stream()
                 .map(entry -> {
                     User user = userRepository.findById(entry.getKey()).orElse(null);
                     if (user == null) {
                         return null;
                     }
 
-                    long seatCount = entry.getValue().size();
-                    double occupancyPercentage = totalOfficeSeats == 0
+                    long bookingCount = entry.getValue();
+                    double percentage = totalBookings == 0
                             ? 0
-                            : (seatCount * 100.0) / totalOfficeSeats;
+                            : (bookingCount * 100.0) / totalBookings;
 
                     return new TopBookingResponse(
                             user.getFirstName() + " " + user.getLastName(),
-                            seatCount,
-                            Math.round(occupancyPercentage * 100.0) / 100.0
+                            bookingCount,
+                            Math.round(percentage * 100.0) / 100.0
                     );
                 })
                 .filter(response -> response != null)
-                .sorted(Comparator.comparingLong(TopBookingResponse::seatCount).reversed())
+                .sorted(Comparator.comparingLong(TopBookingResponse::bookingCount).reversed())
+                .limit(5)
                 .toList();
     }
 

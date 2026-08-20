@@ -2,7 +2,7 @@ package dto;
 
 public record TopBookingResponse(
         String employeeName,
-        long seatCount,
-        double occupancyPercentage
+        long bookingCount,
+        double percentage
 ) {
 }
