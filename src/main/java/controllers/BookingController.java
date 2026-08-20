@@ -39,9 +39,13 @@ public class BookingController {
     }
 
     @PostMapping("/bookings")
-    public ResponseEntity<GetBookingResponse> createBooking(@RequestBody CreateBookingRequest request) {
+    public ResponseEntity<?> createBooking(@RequestBody CreateBookingRequest request) {
         User u = userService.getCurrentUser();
-        return new ResponseEntity<>(bookingService.createBookingDTO(request, u.getId()), HttpStatus.CREATED);
+        try {
+            return new ResponseEntity<>(bookingService.createBookingDTO(request, u.getId()), HttpStatus.CREATED);
+        } catch (IllegalStateException ex) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("message", ex.getMessage()));
+        }
     }
 
     @PutMapping("/bookings/{id}")
