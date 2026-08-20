@@ -344,6 +344,16 @@ public class UserService {
         if (request == null) {
             return;
         }
+        if (request.county() != null && !request.county().isBlank()
+                && (request.locality() == null || request.locality().isBlank())) {
+            throw new IllegalArgumentException("Pentru schimbarea județului trebuie transmisă și localitatea.");
+        }
+        if (request.locality() != null && !request.locality().isBlank()
+                && (request.street() == null || request.street().isBlank()
+                || request.number() == null || request.number().isBlank()
+                || request.postalCode() == null || request.postalCode().isBlank())) {
+            throw new IllegalArgumentException("Pentru schimbarea localității, strada, numărul și codul poștal sunt obligatorii.");
+        }
         Address address = u.getAddress();
 
         if (request.street() != null) {
@@ -360,9 +370,6 @@ public class UserService {
         }
         if (request.floor() != null) {
             address.setFloor(request.floor());
-        }
-        if (request.county() != null && request.locality() == null) {
-            throw new IllegalArgumentException("If you want to modify the county, you have to provide the locality too");
         }
         if (request.locality() != null) {
             County county;
