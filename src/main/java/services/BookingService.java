@@ -91,6 +91,11 @@ public class BookingService {
     }
 
     public Booking createBooking(CreateBookingRequest request, Integer currentUserId) {
+        // Recurența este materializată în rezervări independente. Astfel,
+        // fiecare apariție are propriul conflict, status și loc în calendar.
+        if (request.isRecurring()) {
+            return createRecurringBookings(request, currentUserId);
+        }
 //        if (request.userId() == null) {
 //            throw new IllegalArgumentException("userId este obligatoriu");
 //        }
@@ -146,6 +151,87 @@ public class BookingService {
         emailService.sendEmail(user.getEmail(), "Confirmare Rezervare Birou", "booking-confirmation", vars);
 
         return bookingRepository.save(booking);
+    }
+
+    private Booking createRecurringBookings(CreateBookingRequest request, Integer currentUserId) {
+        if (request.startDate() == null || request.endDate() == null || request.endDate().isBefore(request.startDate())) {
+            throw new IllegalArgumentException("Data finală a recurenței trebuie să fie după data de început.");
+        }
+        int interval = request.recurrenceIntervalOfRecurrence() == null ? 1 : request.recurrenceIntervalOfRecurrence();
+        if (interval < 1) throw new IllegalArgumentException("Intervalul recurenței trebuie să fie cel puțin 1.");
+
+        String frequency = request.recurrenceFrequency().toLowerCase();
+        if (!frequency.equals("zilnic") && !frequency.equals("saptamanal") && !frequency.equals("lunar")) {
+            throw new IllegalArgumentException("Frecvența recurenței este invalidă.");
+        }
+
+        List<LocalDate> occurrenceDates = new java.util.ArrayList<>();
+        LocalDate occurrence = request.startDate();
+        while (!occurrence.isAfter(request.endDate())) {
+            if (occurrence.getDayOfWeek() != DayOfWeek.SATURDAY && occurrence.getDayOfWeek() != DayOfWeek.SUNDAY) {
+                occurrenceDates.add(occurrence);
+            }
+            occurrence = switch (frequency) {
+                case "zilnic" -> occurrence.plusDays(interval);
+                case "saptamanal" -> occurrence.plusWeeks(interval);
+                default -> occurrence.plusMonths(interval);
+            };
+        }
+        if (occurrenceDates.isEmpty()) {
+            throw new IllegalArgumentException("Recurența aleasă conține numai zile de weekend.");
+        }
+
+        List<String> conflictingDates = occurrenceDates.stream()
+                .map(date -> recurringConflictDescription(request, date))
+                .filter(java.util.Objects::nonNull)
+                .toList();
+        if (!conflictingDates.isEmpty()) {
+            throw new IllegalStateException("Seria recurentă nu a fost creată. Locul este ocupat pe: "
+                    + String.join(", ", conflictingDates) + ".");
+        }
+
+        Booking firstBooking = null;
+        for (LocalDate date : occurrenceDates) {
+            CreateBookingRequest singleOccurrence = new CreateBookingRequest(
+                    request.userId(), request.roomId(), request.seatId(),
+                    date, date, request.startTime(), request.endTime(),
+                    null, null, null
+            );
+            Booking created = createBooking(singleOccurrence, currentUserId);
+            if (firstBooking == null) firstBooking = created;
+        }
+        return firstBooking;
+    }
+
+    private boolean hasBookingConflict(CreateBookingRequest request, LocalDate date) {
+        if (request.seatId() != null) {
+            return bookingRepository.existsOverlappingSeatBooking(
+                    request.seatId(), date, date, request.startTime(), request.endTime(), null);
+        }
+        if (request.roomId() != null) {
+            return bookingRepository.existsOverlappingBookingInRoom(
+                    request.roomId(), date, request.startTime(), request.endTime());
+        }
+        throw new IllegalArgumentException("Rezervarea trebuie să aibă un loc sau o sală.");
+    }
+
+    private String recurringConflictDescription(CreateBookingRequest request, LocalDate date) {
+        if (request.seatId() == null) {
+            return hasBookingConflict(request, date) ? date.toString() : null;
+        }
+
+        Seat seat = seatRepository.findById(request.seatId())
+                .orElseThrow(() -> new IllegalArgumentException("Seat not found: " + request.seatId()));
+        List<Booking> conflicts = bookingRepository.findConflictsForSeatAtInterval(
+                seat.getId(), seat.getRoom().getId(), date, request.startTime(), request.endTime());
+        if (conflicts.isEmpty()) return null;
+
+        String occupants = conflicts.stream()
+                .map(booking -> booking.getUser().getFirstName() + " " + booking.getUser().getLastName())
+                .distinct()
+                .reduce((first, second) -> first + ", " + second)
+                .orElse("alt utilizator");
+        return date + " — " + occupants;
     }
 
     public Booking updateBooking(Integer id, UpdateBookingRequest request, Integer currentUserId) {
@@ -259,7 +345,7 @@ public class BookingService {
             throw new IllegalArgumentException("Data de sfarsit nu poate fi inainte de data de inceput");
         }
         for (LocalDate date = booking.getStartDate(); !date.isAfter(booking.getEndDate()); date = date.plusDays(1)) {
-            if (date.getDayOfWeek() == DayOfWeek.SATURDAY || date.getDayOfWeek() == DayOfWeek.SUNDAY) {
+            if (false && (date.getDayOfWeek() == DayOfWeek.SATURDAY || date.getDayOfWeek() == DayOfWeek.SUNDAY)) {
                 throw new IllegalArgumentException("Rezervările nu sunt permise sâmbăta sau duminica");
             }
         }

@@ -35,7 +35,7 @@ public interface BookingRepository extends JpaRepository<Booking, Integer> {
     List<Booking> findActiveBookingsBySeatAndDate(@Param("seatId") Integer seatId, @Param("date") LocalDate date);
 
     @Query("SELECT b.seat.id FROM Booking b WHERE b.seat IS NOT NULL " +
-            "AND b.status <> entities.enums.BookingStatus.ANULATA " +
+            "AND b.status IN (entities.enums.BookingStatus.CONFIRMATA, entities.enums.BookingStatus.IN_ASTEPTARE) " +
             "AND :date BETWEEN b.startDate AND b.endDate " +
             "AND (:startTime < b.endTime AND :endTime > b.startTime)")
     List<Integer> findBookedSeatIdsByInterval(
@@ -44,7 +44,7 @@ public interface BookingRepository extends JpaRepository<Booking, Integer> {
             @Param("endTime") LocalTime endTime
     );
 
-    @Query("SELECT COUNT(b) > 0 FROM Booking b WHERE b.status <> entities.enums.BookingStatus.ANULATA " +
+    @Query("SELECT COUNT(b) > 0 FROM Booking b WHERE b.status IN (entities.enums.BookingStatus.CONFIRMATA, entities.enums.BookingStatus.IN_ASTEPTARE) " +
             "AND (:date BETWEEN b.startDate AND b.endDate) " +
             "AND (:startTime < b.endTime AND :endTime > b.startTime) " +
             "AND (b.room.id = :roomId OR b.seat.room.id = :roomId)")
@@ -56,7 +56,7 @@ public interface BookingRepository extends JpaRepository<Booking, Integer> {
     );
 
     @Query("SELECT b FROM Booking b JOIN FETCH b.user WHERE b.seat IS NOT NULL " +
-            "AND b.status <> entities.enums.BookingStatus.ANULATA " +
+            "AND b.status IN (entities.enums.BookingStatus.CONFIRMATA, entities.enums.BookingStatus.IN_ASTEPTARE) " +
             "AND :date BETWEEN b.startDate AND b.endDate " +
             "AND (:startTime < b.endTime AND :endTime > b.startTime)")
     List<Booking> findBookedSeatsWithUsersByInterval(
@@ -68,7 +68,7 @@ public interface BookingRepository extends JpaRepository<Booking, Integer> {
     // verifica daca acelasi loc are deja o rezervare activa care se suprapune ca perioada de zile si interval orar
     @Query("SELECT COUNT(b) > 0 FROM Booking b WHERE b.seat.id = :seatId " +
             "AND (:excludeBookingId IS NULL OR b.id <> :excludeBookingId) " +
-            "AND b.status <> entities.enums.BookingStatus.ANULATA " +
+            "AND b.status IN (entities.enums.BookingStatus.CONFIRMATA, entities.enums.BookingStatus.IN_ASTEPTARE) " +
             "AND b.startDate <= :endDate AND b.endDate >= :startDate " +
             "AND b.startTime < :endTime AND b.endTime > :startTime")
     boolean existsOverlappingSeatBooking(
@@ -78,6 +78,18 @@ public interface BookingRepository extends JpaRepository<Booking, Integer> {
             @Param("startTime") LocalTime startTime,
             @Param("endTime") LocalTime endTime,
             @Param("excludeBookingId") Integer excludeBookingId
+    );
+
+    @Query("SELECT b FROM Booking b JOIN FETCH b.user WHERE b.status IN (entities.enums.BookingStatus.CONFIRMATA, entities.enums.BookingStatus.IN_ASTEPTARE) " +
+            "AND :date BETWEEN b.startDate AND b.endDate " +
+            "AND (:startTime < b.endTime AND :endTime > b.startTime) " +
+            "AND (b.seat.id = :seatId OR b.room.id = :roomId)")
+    List<Booking> findConflictsForSeatAtInterval(
+            @Param("seatId") Integer seatId,
+            @Param("roomId") Integer roomId,
+            @Param("date") LocalDate date,
+            @Param("startTime") LocalTime startTime,
+            @Param("endTime") LocalTime endTime
     );
 
     //cautam in baza de date rezervarile pentru a trimite alerta de 30min

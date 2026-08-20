@@ -164,7 +164,7 @@ public class UserService {
 
         // Check colleague's active status (not currentUser's)
         if (!colleague.getIsActive()) {
-            return ColleagueResponse.fromEntity(colleague, "inactiv",
+            return ColleagueResponse.fromEntity(colleague, "OOO",
                     null, null, isFavorite);
         }
 
