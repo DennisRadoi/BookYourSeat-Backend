@@ -35,7 +35,7 @@ public class EmailService {
             helper.setText(htmlContent, true);
 
             mailSender.send(mimeMessage);
-        } catch (MessagingException e) {
+        } catch (Exception e) {
             System.err.println("Eroare la trimiterea email-ului catre " + to + ": " + e.getMessage());
         }
     }

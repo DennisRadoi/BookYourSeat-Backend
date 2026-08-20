@@ -23,9 +23,12 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -91,6 +94,10 @@ public class BookingService {
     }
 
     public Booking createBooking(CreateBookingRequest request, Integer currentUserId) {
+        return createBooking(request, currentUserId, true);
+    }
+
+    private Booking createBooking(CreateBookingRequest request, Integer currentUserId, boolean sendConfirmationEmail) {
         // Recurența este materializată în rezervări independente. Astfel,
         // fiecare apariție are propriul conflict, status și loc în calendar.
         if (request.isRecurring()) {
@@ -142,13 +149,9 @@ public class BookingService {
             booking.setRecurringBooking(recurringBooking);
         }
 
-        Map<String, Object> vars = new HashMap<>();
-        vars.put("userName", user.getFirstName());
-        vars.put("startDate", booking.getStartDate().toString());
-        vars.put("startTime", booking.getStartTime().toString());
-        vars.put("location", booking.getSeat() != null ? "Locul #" + booking.getSeat().getId() : booking.getRoom().getName());
-
-        emailService.sendEmail(user.getEmail(), "Confirmare Rezervare Birou", "booking-confirmation", vars);
+        if (sendConfirmationEmail) {
+            sendBookingConfirmation(booking);
+        }
 
         return bookingRepository.save(booking);
     }
@@ -165,17 +168,22 @@ public class BookingService {
             throw new IllegalArgumentException("Frecvența recurenței este invalidă.");
         }
 
+        Set<DayOfWeek> selectedDays = parseRecurringDays(request.recurrenceDaysOfWeek(), request.startDate());
         List<LocalDate> occurrenceDates = new java.util.ArrayList<>();
-        LocalDate occurrence = request.startDate();
-        while (!occurrence.isAfter(request.endDate())) {
-            if (occurrence.getDayOfWeek() != DayOfWeek.SATURDAY && occurrence.getDayOfWeek() != DayOfWeek.SUNDAY) {
-                occurrenceDates.add(occurrence);
+        for (LocalDate occurrence = request.startDate(); !occurrence.isAfter(request.endDate()); occurrence = occurrence.plusDays(1)) {
+            if (occurrence.getDayOfWeek() == DayOfWeek.SATURDAY || occurrence.getDayOfWeek() == DayOfWeek.SUNDAY) {
+                continue;
             }
-            occurrence = switch (frequency) {
-                case "zilnic" -> occurrence.plusDays(interval);
-                case "saptamanal" -> occurrence.plusWeeks(interval);
-                default -> occurrence.plusMonths(interval);
+            boolean belongsToSeries = switch (frequency) {
+                case "zilnic" -> ChronoUnit.DAYS.between(request.startDate(), occurrence) % interval == 0;
+                case "saptamanal" -> ChronoUnit.WEEKS.between(
+                        request.startDate().with(DayOfWeek.MONDAY), occurrence.with(DayOfWeek.MONDAY)) % interval == 0
+                        && selectedDays.contains(occurrence.getDayOfWeek());
+                default -> ChronoUnit.MONTHS.between(
+                        request.startDate().withDayOfMonth(1), occurrence.withDayOfMonth(1)) % interval == 0
+                        && selectedDays.contains(occurrence.getDayOfWeek());
             };
+            if (belongsToSeries) occurrenceDates.add(occurrence);
         }
         if (occurrenceDates.isEmpty()) {
             throw new IllegalArgumentException("Recurența aleasă conține numai zile de weekend.");
@@ -197,10 +205,51 @@ public class BookingService {
                     date, date, request.startTime(), request.endTime(),
                     null, null, null
             );
-            Booking created = createBooking(singleOccurrence, currentUserId);
+            Booking created = createBooking(singleOccurrence, currentUserId, false);
             if (firstBooking == null) firstBooking = created;
         }
+        sendRecurringBookingConfirmation(firstBooking, occurrenceDates);
         return firstBooking;
+    }
+
+    private Set<DayOfWeek> parseRecurringDays(String daysOfWeek, LocalDate startDate) {
+        Set<DayOfWeek> result = EnumSet.noneOf(DayOfWeek.class);
+        if (daysOfWeek != null && !daysOfWeek.isBlank()) {
+            for (String value : daysOfWeek.split(",")) {
+                try {
+                    result.add(DayOfWeek.valueOf(value.trim().toUpperCase()));
+                } catch (IllegalArgumentException ignored) {
+                    // Invalid labels are ignored; an empty selection falls back to the start day.
+                }
+            }
+        }
+        if (result.isEmpty()) result.add(startDate.getDayOfWeek());
+        return result;
+    }
+
+    private void sendBookingConfirmation(Booking booking) {
+        Map<String, Object> vars = new HashMap<>();
+        vars.put("userName", booking.getUser().getFirstName());
+        vars.put("startDate", booking.getStartDate().toString());
+        vars.put("startTime", booking.getStartTime().toString());
+        vars.put("endTime", booking.getEndTime().toString());
+        vars.put("location", booking.getSeat() != null ? "Locul #" + booking.getSeat().getId() : booking.getRoom().getName());
+        if (booking.getRoom() != null && booking.getSeat() == null) {
+            vars.put("roomName", booking.getRoom().getName());
+            emailService.sendEmail(booking.getUser().getEmail(), "Confirmare rezervare sală", "room-booking-confirmation", vars);
+            return;
+        }
+        emailService.sendEmail(booking.getUser().getEmail(), "Confirmare Rezervare Birou", "booking-confirmation", vars);
+    }
+
+    private void sendRecurringBookingConfirmation(Booking booking, List<LocalDate> occurrenceDates) {
+        Map<String, Object> vars = new HashMap<>();
+        vars.put("userName", booking.getUser().getFirstName());
+        vars.put("startTime", booking.getStartTime().toString());
+        vars.put("endTime", booking.getEndTime().toString());
+        vars.put("location", booking.getSeat() != null ? "Locul #" + booking.getSeat().getId() : booking.getRoom().getName());
+        vars.put("dates", occurrenceDates.stream().map(LocalDate::toString).toList());
+        emailService.sendEmail(booking.getUser().getEmail(), "Confirmare serie de rezervări", "recurring-booking-confirmation", vars);
     }
 
     private boolean hasBookingConflict(CreateBookingRequest request, LocalDate date) {
