@@ -20,6 +20,8 @@ import repositories.SeatRepository;
 import repositories.UserRepository;
 
 import org.springframework.transaction.annotation.Transactional;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
@@ -190,7 +192,7 @@ public class BookingService {
         updateVars.put("startDate", existing.getStartDate().toString());
         updateVars.put("startTime", existing.getStartTime().toString());
         updateVars.put("location", existing.getSeat() != null ? "Locul #" + existing.getSeat().getId() : existing.getRoom().getName());
-
+        updateVars.put("status", existing.getStatus());
         emailService.sendEmail(existing.getUser().getEmail(), "Modificare Rezervare Birou", "booking-update", updateVars);
 
         return bookingRepository.save(existing);
@@ -255,6 +257,11 @@ public class BookingService {
         }
         if (booking.getEndDate().isBefore(booking.getStartDate())) {
             throw new IllegalArgumentException("Data de sfarsit nu poate fi inainte de data de inceput");
+        }
+        for (LocalDate date = booking.getStartDate(); !date.isAfter(booking.getEndDate()); date = date.plusDays(1)) {
+            if (date.getDayOfWeek() == DayOfWeek.SATURDAY || date.getDayOfWeek() == DayOfWeek.SUNDAY) {
+                throw new IllegalArgumentException("Rezervările nu sunt permise sâmbăta sau duminica");
+            }
         }
         if (booking.getStartDate().equals(booking.getEndDate())
                 && !booking.getStartTime().isBefore(booking.getEndTime())) {

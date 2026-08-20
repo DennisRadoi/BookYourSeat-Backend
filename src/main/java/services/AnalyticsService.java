@@ -13,7 +13,6 @@ import repositories.BookingRepository;
 import repositories.RoomRepository;
 import repositories.SeatRepository;
 import repositories.UserRepository;
-import utils.Utils;
 import dto.WeeklyBookingsResponse;
 import dto.WeeklyDayBookingsResponse;
 
@@ -22,7 +21,6 @@ import java.util.ArrayList;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.time.LocalTime;
 import java.time.YearMonth;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
@@ -230,17 +228,12 @@ public class AnalyticsService {
     @Transactional(readOnly = true)
     public TodayAnalyticsResponse getTodayAnalytics() {
         LocalDate today = LocalDate.now();
-        LocalTime now = LocalTime.now();
-
         List<Booking> activeBookings = bookingRepository
-                .findByStatusAndStartDateLessThanEqualAndEndDateGreaterThanEqual(
-                        BookingStatus.CONFIRMATA,
+                .findByStartDateLessThanEqualAndEndDateGreaterThanEqualAndStatusNot(
                         today,
-                        today
-                )
-                .stream()
-                .filter(booking -> Utils.isActiveBookingNow(today, now, booking))
-                .toList();
+                        today,
+                        BookingStatus.ANULATA
+                );
 
         long occupiedConferenceRooms = activeBookings.stream()
                 .filter(booking -> booking.getRoom() != null)
@@ -292,10 +285,10 @@ public class AnalyticsService {
         LocalDate friday = monday.plusDays(4);
 
         List<Booking> bookings = bookingRepository
-                .findByStatusAndStartDateLessThanEqualAndEndDateGreaterThanEqual(
-                        BookingStatus.CONFIRMATA,
+                .findByStartDateLessThanEqualAndEndDateGreaterThanEqualAndStatusNot(
                         friday,
-                        monday
+                        monday,
+                        BookingStatus.ANULATA
                 );
 
         List<WeeklyDayBookingsResponse> days = new ArrayList<>();
