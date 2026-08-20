@@ -4,5 +4,7 @@ public record UpdateMyAdressRequest(String county, String locality,
                                     String number, String street,
                                     String apartmentBlock,
                                     Integer floor,
-                                    String postalCode) {
+                                    String postalCode,
+                                    boolean clearApartmentBlock,
+                                    boolean clearFloor) {
 }

@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import repositories.*;
 import utils.Filter;
+import utils.InputValidation;
 import utils.Utils;
 
 import java.time.LocalDate;
@@ -298,9 +299,7 @@ public class UserService {
             user.setLastName(name[1]);
         }
         if (request.phoneNumber() != null) {
-            if (request.phoneNumber().length() != 10) {
-                throw new IllegalArgumentException("Phone number size is invalid.");
-            }
+            InputValidation.requireValidPhoneNumber(request.phoneNumber());
             user.setPhoneNumber(request.phoneNumber());
         }
         if (request.email() != null) {
@@ -356,19 +355,27 @@ public class UserService {
         }
         Address address = u.getAddress();
 
+        if (request.postalCode() != null && !request.postalCode().isBlank()) {
+            InputValidation.requireValidPostalCode(request.postalCode());
+        }
+
         if (request.street() != null) {
             address.setStreet(request.street());
         }
         if (request.number() != null) {
             address.setNumber(request.number());
         }
-        if (request.apartmentBlock() != null) {
+        if (request.clearApartmentBlock()) {
+            address.setApartmentBlock(null);
+        } else if (request.apartmentBlock() != null) {
             address.setApartmentBlock(request.apartmentBlock());
         }
         if (request.postalCode() != null) {
             address.setPostalCode(request.postalCode());
         }
-        if (request.floor() != null) {
+        if (request.clearFloor()) {
+            address.setFloor(null);
+        } else if (request.floor() != null) {
             address.setFloor(request.floor());
         }
         if (request.locality() != null) {
@@ -431,6 +438,9 @@ public class UserService {
         }
         if (request.receivesNotificationOnEmail() != null) {
             userPreferences.setBookingConfirmationOnEmail(request.receivesNotificationOnEmail());
+        }
+        if (request.isActive() != null) {
+            u.setIsActive(request.isActive());
         }
         if (request.daysOfWeek() != null) {
             List<String> parts = new ArrayList<>();
@@ -598,6 +608,7 @@ public class UserService {
             );
         }
 
+        InputValidation.requireValidPassword(request.newPassword());
         u.setPasswordHash(passwordEncoder.encode(request.newPassword()));
         userRepository.save(u);
     }

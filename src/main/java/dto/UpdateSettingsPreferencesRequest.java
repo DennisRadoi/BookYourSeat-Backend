@@ -5,6 +5,7 @@ public record UpdateSettingsPreferencesRequest(String preferredBuilding,
                                                String preferredStartTime,
                                                String preferredEndTime,
                                                Boolean receivesNotificationOnEmail,
-                                               Boolean reminderBeforeBooking) {
+                                               Boolean reminderBeforeBooking,
+                                               Boolean isActive) {
 
 }

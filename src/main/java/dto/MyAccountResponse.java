@@ -30,11 +30,24 @@ public record MyAccountResponse(String firstName, String lastName,
             return null;
         }
 
-        return address.getLocality().getCounty().getName()
-                + ", " + address.getLocality().getName()
-                + ", " + address.getStreet()
-                + " " + address.getNumber()
-                + " " + address.getPostalCode();
+        StringBuilder formatted = new StringBuilder();
+        if (address.getLocality() != null) {
+            if (address.getLocality().getCounty() != null) {
+                formatted.append(address.getLocality().getCounty().getName()).append(", ");
+            }
+            formatted.append(address.getLocality().getName()).append(", ");
+        }
+        formatted.append(address.getStreet()).append(" ").append(address.getNumber());
+        if (address.getApartmentBlock() != null && !address.getApartmentBlock().isBlank()) {
+            formatted.append(", Bloc ").append(address.getApartmentBlock());
+        }
+        if (address.getFloor() != null) {
+            formatted.append(", Etaj ").append(address.getFloor());
+        }
+        if (address.getPostalCode() != null && !address.getPostalCode().isBlank()) {
+            formatted.append(" ").append(address.getPostalCode());
+        }
+        return formatted.toString();
     }
 }
 

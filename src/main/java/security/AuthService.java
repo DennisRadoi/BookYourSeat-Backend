@@ -20,6 +20,7 @@ import repositories.UserPreferencesRepository;
 import repositories.UserRepository;
 import security.dto.*;
 import services.EmailService;
+import utils.InputValidation;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -60,6 +61,10 @@ public class AuthService {
 
         if (userRepository.existsByEmail(request.email())) {
             throw new EmailAlreadyExistsException(request.email());
+        }
+        InputValidation.requireValidPassword(request.password());
+        if (request.phoneNumber() != null && !request.phoneNumber().isBlank()) {
+            InputValidation.requireValidPhoneNumber(request.phoneNumber());
         }
 
 //        Department department = request.departmentId() == null
@@ -130,7 +135,7 @@ public class AuthService {
 
         userRepository.save(user);
 
-        String resetLink = "http://localhost:3000/reset-password?token=" + token;
+        String resetLink = "http://localhost:5173/reset-password?token=" + token;
 
         Map<String, Object> variables = Map.of(
                 "firstName", user.getFirstName(),
@@ -149,6 +154,7 @@ public class AuthService {
             throw new IllegalArgumentException("Token-ul de resetare a expirat.");
         }
 
+        InputValidation.requireValidPassword(request.newPassword());
         user.setPasswordHash(passwordEncoder.encode(request.newPassword()));
         user.setResetToken(null);
         user.setResetTokenExpiry(null);
