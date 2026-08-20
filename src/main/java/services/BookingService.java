@@ -10,6 +10,7 @@ import entities.RecurringBooking;
 import entities.Room;
 import entities.Seat;
 import entities.User;
+import entities.UserPreferences;
 import entities.enums.BookingStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -236,10 +237,10 @@ public class BookingService {
         vars.put("location", booking.getSeat() != null ? "Locul #" + booking.getSeat().getId() : booking.getRoom().getName());
         if (booking.getRoom() != null && booking.getSeat() == null) {
             vars.put("roomName", booking.getRoom().getName());
-            emailService.sendEmail(booking.getUser().getEmail(), "Confirmare rezervare sală", "room-booking-confirmation", vars);
+            sendBookingEmail(booking, "Confirmare rezervare sală", "room-booking-confirmation", vars);
             return;
         }
-        emailService.sendEmail(booking.getUser().getEmail(), "Confirmare Rezervare Birou", "booking-confirmation", vars);
+        sendBookingEmail(booking, "Confirmare Rezervare Birou", "booking-confirmation", vars);
     }
 
     private void sendRecurringBookingConfirmation(Booking booking, List<LocalDate> occurrenceDates) {
@@ -249,7 +250,15 @@ public class BookingService {
         vars.put("endTime", booking.getEndTime().toString());
         vars.put("location", booking.getSeat() != null ? "Locul #" + booking.getSeat().getId() : booking.getRoom().getName());
         vars.put("dates", occurrenceDates.stream().map(LocalDate::toString).toList());
-        emailService.sendEmail(booking.getUser().getEmail(), "Confirmare serie de rezervări", "recurring-booking-confirmation", vars);
+        sendBookingEmail(booking, "Confirmare serie de rezervări", "recurring-booking-confirmation", vars);
+    }
+
+    private void sendBookingEmail(Booking booking, String subject, String templateName, Map<String, Object> variables) {
+        UserPreferences preferences = booking.getUser().getUserPreferences();
+        if (preferences == null || !Boolean.TRUE.equals(preferences.getBookingConfirmationOnEmail())) {
+            return;
+        }
+        emailService.sendEmail(booking.getUser().getEmail(), subject, templateName, variables);
     }
 
     private boolean hasBookingConflict(CreateBookingRequest request, LocalDate date) {
@@ -328,7 +337,7 @@ public class BookingService {
         updateVars.put("startTime", existing.getStartTime().toString());
         updateVars.put("location", existing.getSeat() != null ? "Locul #" + existing.getSeat().getId() : existing.getRoom().getName());
         updateVars.put("status", existing.getStatus());
-        emailService.sendEmail(existing.getUser().getEmail(), "Modificare Rezervare Birou", "booking-update", updateVars);
+        sendBookingEmail(existing, "Modificare Rezervare Birou", "booking-update", updateVars);
 
         return bookingRepository.save(existing);
     }
@@ -348,7 +357,7 @@ public class BookingService {
         cancelVars.put("startDate", booking.getStartDate().toString());
         cancelVars.put("location", booking.getSeat() != null ? "Locul #" + booking.getSeat().getId() : booking.getRoom().getName());
 
-        emailService.sendEmail(booking.getUser().getEmail(), "Anulare Rezervare Birou", "booking-cancellation", cancelVars);
+        sendBookingEmail(booking, "Anulare Rezervare Birou", "booking-cancellation", cancelVars);
 
         return resp;
     }

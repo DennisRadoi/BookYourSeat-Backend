@@ -1,6 +1,7 @@
 package services;
 
 import entities.Booking;
+import entities.UserPreferences;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -32,6 +33,13 @@ public class DepartureAlertScheduler {
         List<Booking> upcomingBookings = bookingRepository.findUpcomingBookingsStartingAt(today, targetTime);
 
         for (Booking booking : upcomingBookings) {
+            UserPreferences preferences = booking.getUser().getUserPreferences();
+            if (preferences == null
+                    || !Boolean.TRUE.equals(preferences.getBookingConfirmationOnEmail())
+                    || !Boolean.TRUE.equals(preferences.getReminderBeforeBooking())) {
+                continue;
+            }
+
             Map<String, Object> vars = new HashMap<>();
             vars.put("userName", booking.getUser().getFirstName());
             vars.put("startTime", booking.getStartTime().toString());
