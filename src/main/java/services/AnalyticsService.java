@@ -1,8 +1,12 @@
 package services;
 
 import dto.TodayAnalyticsResponse;
+import dto.TopBookingResponse;
+import dto.WeeklyBookingsResponse;
+import dto.WeeklyDayBookingsResponse;
 import entities.Booking;
 import entities.RecurringBooking;
+import entities.User;
 import entities.enums.BookingStatus;
 import entities.enums.RoomType;
 import entities.enums.SeatStatus;
@@ -13,19 +17,18 @@ import repositories.BookingRepository;
 import repositories.RoomRepository;
 import repositories.SeatRepository;
 import repositories.UserRepository;
-import dto.WeeklyBookingsResponse;
-import dto.WeeklyDayBookingsResponse;
-
-import java.time.temporal.TemporalAdjusters;
-import java.util.ArrayList;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalAdjusters;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -275,6 +278,61 @@ public class AnalyticsService {
                 peopleInOffice
         );
     }
+    @Transactional(readOnly = true)
+    public List<TopBookingResponse> getTopBookings(Integer year, Integer month) {
+        LocalDate referenceDate = LocalDate.now();
+        int targetYear = year != null ? year : referenceDate.getYear();
+        int targetMonth = month != null ? month : referenceDate.getMonthValue();
+
+        YearMonth selectedMonth = YearMonth.of(targetYear, targetMonth);
+        LocalDate monthStart = selectedMonth.atDay(1);
+        LocalDate monthEnd = selectedMonth.atEndOfMonth();
+        LocalDate nextMonthStart = selectedMonth.plusMonths(1).atDay(1);
+
+        List<Booking> bookingsInMonth = bookingRepository
+                .findByStartDateLessThanAndEndDateGreaterThanEqualAndStatusNot(
+                        nextMonthStart,
+                        monthStart,
+                        BookingStatus.ANULATA
+                );
+
+        long totalOfficeSeats = seatRepository
+                .countByRoomTypeAndStatus(RoomType.DE_OFICIU, SeatStatus.REZERVABIL);
+
+        Map<Integer, Set<Integer>> seatsByUser = bookingsInMonth.stream()
+                .filter(booking -> booking.getSeat() != null)
+                .filter(booking -> booking.getSeat().getRoom() != null)
+                .filter(booking -> booking.getSeat().getRoom().getType() == RoomType.DE_OFICIU)
+                .filter(booking -> booking.getStartDate().isBefore(monthEnd.plusDays(1))
+                        && booking.getEndDate().isAfter(monthStart.minusDays(1)))
+                .collect(Collectors.groupingBy(
+                        booking -> booking.getUser().getId(),
+                        Collectors.mapping(booking -> booking.getSeat().getId(), Collectors.toSet())
+                ));
+
+        return seatsByUser.entrySet().stream()
+                .map(entry -> {
+                    User user = userRepository.findById(entry.getKey()).orElse(null);
+                    if (user == null) {
+                        return null;
+                    }
+
+                    long seatCount = entry.getValue().size();
+                    double occupancyPercentage = totalOfficeSeats == 0
+                            ? 0
+                            : (seatCount * 100.0) / totalOfficeSeats;
+
+                    return new TopBookingResponse(
+                            user.getFirstName() + " " + user.getLastName(),
+                            seatCount,
+                            Math.round(occupancyPercentage * 100.0) / 100.0
+                    );
+                })
+                .filter(response -> response != null)
+                .sorted(Comparator.comparingLong(TopBookingResponse::seatCount).reversed())
+                .toList();
+    }
+
     @Transactional(readOnly = true)
     public WeeklyBookingsResponse getCurrentWeekBookings() {
         LocalDate today = LocalDate.now();

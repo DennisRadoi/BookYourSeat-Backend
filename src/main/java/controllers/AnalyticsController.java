@@ -2,6 +2,7 @@ package controllers;
 
 import dto.AnalyticsBookingsResponse;
 import dto.TodayAnalyticsResponse;
+import dto.TopBookingResponse;
 import dto.WeeklyBookingsResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -10,6 +11,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import services.AnalyticsService;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/analytics")
@@ -33,6 +36,15 @@ public class AnalyticsController {
     public ResponseEntity<TodayAnalyticsResponse> getTodayAnalytics() {
         return ResponseEntity.ok(analyticsService.getTodayAnalytics());
     }
+
+    @GetMapping("/top-bookings")
+    public ResponseEntity<List<TopBookingResponse>> getTopBookings(
+            @RequestParam(required = false) Integer year,
+            @RequestParam(required = false) Integer month
+    ) {
+        return ResponseEntity.ok(analyticsService.getTopBookings(year, month));
+    }
+
     @GetMapping("/bookings/current-week")
     public ResponseEntity<WeeklyBookingsResponse> getCurrentWeekBookings() {
         return ResponseEntity.ok(
