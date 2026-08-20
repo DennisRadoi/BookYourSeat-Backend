@@ -8,7 +8,8 @@ public record MySettingsResponse(boolean quietPlace, boolean nearWindow,
                                  String preferredStartTime,
                                  String preferredEndTime,
                                  boolean reminderBeforeBooking,
-                                 boolean bookingConfirmationOnEmail) {
+                                 boolean bookingConfirmationOnEmail,
+                                 String preferredBuilding) {
     public static MySettingsResponse fromEntity(User user) {
         UserPreferences preferinte = user.getUserPreferences();
         return new MySettingsResponse(
@@ -18,7 +19,9 @@ public record MySettingsResponse(boolean quietPlace, boolean nearWindow,
                 preferinte == null ? null : String.valueOf(preferinte.getPreferredStartTime()),
                 preferinte == null ? null : String.valueOf(preferinte.getPreferredEndTime()),
                 preferinte == null ? null : preferinte.getReminderBeforeBooking(),
-                preferinte == null ? null : preferinte.getBookingConfirmationOnEmail()
+                preferinte == null ? null : preferinte.getBookingConfirmationOnEmail(),
+                preferinte == null || preferinte.getPreferredBuilding() == null
+                        ? null : preferinte.getPreferredBuilding().getName()
         );
     }
 }

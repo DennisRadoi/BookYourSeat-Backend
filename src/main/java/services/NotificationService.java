@@ -21,9 +21,9 @@ public class NotificationService {
     public java.util.List<GetNotificationResponse> getUserNotifications(Integer userId, Boolean isRead) {
         java.util.List<UserNotification> entities;
         if (isRead == null) {
-            entities = userNotificationRepository.findByUserId(userId);
+            entities = userNotificationRepository.findByUserIdOrderByNotification_CreatedAtDesc(userId);
         } else {
-            entities = userNotificationRepository.findByUserIdAndHasBeenRead(userId, isRead);
+            entities = userNotificationRepository.findByUserIdAndHasBeenReadOrderByNotification_CreatedAtDesc(userId, isRead);
         }
         return entities.stream().map(GetNotificationResponse::fromEntity).toList();
     }
@@ -39,7 +39,7 @@ public class NotificationService {
     }
 
     public void markAllNotificationsAsRead(Integer userId) {
-        List<UserNotification> list = userNotificationRepository.findByUserId(userId);
+        List<UserNotification> list = userNotificationRepository.findByUserIdOrderByNotification_CreatedAtDesc(userId);
         for (UserNotification un : list) {
             un.setHasBeenRead(true);
         }

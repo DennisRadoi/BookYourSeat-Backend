@@ -1,6 +1,7 @@
 package repositories;
 
 import entities.Seat;
+import entities.enums.RoomType;
 import entities.enums.SeatStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -25,4 +26,5 @@ public interface SeatRepository extends JpaRepository<Seat, Integer> {
             @Param("hasMonitor") Boolean hasMonitor,
             @Param("hasStandupDesk") Boolean hasStandupDesk
     );
+    long countByRoomTypeAndStatus(RoomType roomType, SeatStatus status);
 }

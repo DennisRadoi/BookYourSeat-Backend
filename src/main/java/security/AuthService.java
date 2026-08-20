@@ -62,9 +62,18 @@ public class AuthService {
             throw new EmailAlreadyExistsException(request.email());
         }
 
+//        Department department = request.departmentId() == null
+//                ? departmentRepository.findAll().stream().findFirst()
+//                    .orElseThrow(() -> new IllegalStateException("No department is configured."))
+//                : departmentRepository.findById(request.departmentId())
+//                    .orElseThrow(() -> new ResourceNotFoundException("Department", request.departmentId()));
         Department department = departmentRepository.findAll().stream().findFirst()
                 .orElseThrow(() -> new IllegalStateException("No department is configured."));
-
+//        Address address = request.addressId() == null
+//                ? addressRepository.findAll().stream().findFirst()
+//                    .orElseThrow(() -> new IllegalStateException("No address is configured."))
+//                : addressRepository.findById(request.addressId())
+//                    .orElseThrow(() -> new ResourceNotFoundException("Address", request.addressId()));
         Address address = new Address();
         address.setType(AddressType.DE_DOMICILIU);
         address.setNumber("");

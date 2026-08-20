@@ -24,13 +24,14 @@ public class UserController {
             @RequestParam(required = false) String search,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) Integer floor,
+            @RequestParam(required = false) String building,
             @RequestParam(required = false) Boolean favorite,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "5") int size
     ) {
         Integer currentUserId = userService.getCurrentUser().getId();
         return userService.getColleagues(
-                currentUserId, search, status, floor, favorite, page, size
+                currentUserId, search, status, floor, building, favorite, page, size
         );
     }
 
@@ -44,6 +45,11 @@ public class UserController {
     public MyAccountResponse getMyAccount() {
         Integer userId = userService.getCurrentUser().getId();
         return userService.getMyAccountResponse(userId);
+    }
+
+    @GetMapping("/active-count")
+    public long getActiveColleaguesCount() {
+        return userService.getActiveColleaguesCount(userService.getCurrentUser().getId());
     }
 
     @GetMapping("/{colleagueId}")
