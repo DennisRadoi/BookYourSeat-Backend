@@ -94,6 +94,10 @@ public class UserService {
         return userRepository.findAllByIsActiveFalse();
     }
 
+    public long getActiveColleaguesCount(Integer currentUserId) {
+        return userRepository.countByIsActiveTrue() - (findById(currentUserId).getIsActive() ? 1 : 0);
+    }
+
     public List<User> findAllByDepartmentName(String name) {
         return userRepository.findALlByDepartmentName(name);
     }
@@ -122,17 +126,29 @@ public class UserService {
               String status,
               Integer floor,
               String building,
-              Boolean favorite,
+            Boolean favorite,
             int page,
             int size) {
+        Set<Integer> favoriteIds = favoriteColleagueRepository.findFavoriteUsersByUserId(currentUserId)
+                .stream().map(User::getId).collect(java.util.stream.Collectors.toSet());
+        LocalDate today = LocalDate.now();
+        LocalTime now = LocalTime.now();
+        Map<Integer, Booking> activeBookingsByUserId = bookingRepository
+                .findByStatusAndStartDateLessThanEqualAndEndDateGreaterThanEqual(
+                        BookingStatus.CONFIRMATA, today, today)
+                .stream()
+                .filter(booking -> Utils.isActiveBookingNow(today, now, booking))
+                .collect(java.util.stream.Collectors.toMap(
+                        booking -> booking.getUser().getId(), booking -> booking, (first, ignored) -> first));
+
         List<ColleagueResponse> filtered = userRepository.findAll()
                 .stream()
                 .filter(u -> !u.getId().equals(currentUserId))
-                .map(u -> toColleagueResponse(currentUserId, u))
+                .map(u -> toColleagueResponse(u, favoriteIds.contains(u.getId()), activeBookingsByUserId.get(u.getId())))
                 .filter(response -> Filter.matchesSearch(response, search))
                 .filter(response -> Filter.matchesStatus(response, status))
-                  .filter(response -> Filter.matchesFloor(response, floor))
-                  .filter(response -> Filter.matchesBuilding(response, building))
+                .filter(response -> Filter.matchesFloor(response, floor))
+                .filter(response -> Filter.matchesBuilding(response, building))
                 .filter(response -> Filter.matchesFavorite(response, favorite))
                 .toList();
 
@@ -192,6 +208,23 @@ public class UserService {
                       activeBooking.getSeat().getRoom().getBuilding().getName(), activeBooking.getSeat().getRoom().getName(), isFavorite
               );
         }
+    }
+
+    private ColleagueResponse toColleagueResponse(User colleague, boolean isFavorite, Booking activeBooking) {
+        if (!colleague.getIsActive()) {
+            return ColleagueResponse.fromEntity(colleague, "OOO", null, null, isFavorite);
+        }
+        if (activeBooking == null) {
+            return ColleagueResponse.fromEntity(colleague, "remote", null, null, isFavorite);
+        }
+        if (activeBooking.getSeat() == null) {
+            return ColleagueResponse.fromEntity(colleague, "la birou",
+                    String.valueOf(activeBooking.getRoom().getFloor()),
+                    activeBooking.getRoom().getBuilding().getName(), activeBooking.getRoom().getName(), isFavorite);
+        }
+        return ColleagueResponse.fromEntity(colleague, "la birou",
+                String.valueOf(activeBooking.getSeat().getRoom().getFloor()),
+                activeBooking.getSeat().getRoom().getBuilding().getName(), activeBooking.getSeat().getRoom().getName(), isFavorite);
     }
 
     public ColleagueProfileResponse toColleagueProfileResponse(Integer colleagueId, Integer userId) {
