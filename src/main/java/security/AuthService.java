@@ -6,9 +6,11 @@ import entities.User;
 import entities.UserPreferences;
 import entities.enums.AddressType;
 import exceptions.EmailAlreadyExistsException;
+import exceptions.LoginFailedException;
 import exceptions.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -44,10 +46,17 @@ public class AuthService {
     private final EmailService emailService;
 
     public LoginResponse login(LoginRequest request) {
+        if (request.email() == null || userRepository.findByEmail(request.email()).isEmpty()) {
+            throw new LoginFailedException("Utilizatorul nu există");
+        }
 
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.email(), request.password())
-        );
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(request.email(), request.password())
+            );
+        } catch (BadCredentialsException ex) {
+            throw new LoginFailedException("Parola e incorectă");
+        }
 
         UserDetails userDetails = userDetailsService.loadUserByUsername(request.email());
 
