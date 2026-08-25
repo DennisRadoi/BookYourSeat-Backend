@@ -11,6 +11,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
         "services",
         "repositories",
         "entities",
+        "exceptions",
         "security",
         "dto",
         "utils"
