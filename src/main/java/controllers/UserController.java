@@ -5,6 +5,7 @@ import entities.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import jakarta.validation.Valid;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import services.FavoriteColleagueService;
@@ -86,7 +87,7 @@ public class UserController {
 
     @PatchMapping("/me")
     public MyAccountResponse updateProfile(
-            @Validated @RequestBody UpdateMyAccountRequest request) {
+            @Valid @RequestBody UpdateMyAccountRequest request) {
         Integer currentUserId = userService.getCurrentUser().getId();
         return userService.updateProfile(currentUserId, request);
     }
