@@ -11,7 +11,7 @@ public record UpdateMyAccountRequest(
                                      @Email(message = "Emailul nu are un format valid.")
                                      String email,
                                      String profilePhoto,
-                                     @Pattern(regexp = "\\d{10}", message = "Numărul de telefon trebuie să conțină exact 10 cifre.")
+                                     @Pattern(regexp = "\\+[1-9]\\d{6,14}", message = "Numărul de telefon trebuie să fie în format internațional, cu prefix de țară.")
                                      String phoneNumber,
                                      @Size(max = 100, message = "Numele departamentului este prea lung.")
                                      String departmentName,

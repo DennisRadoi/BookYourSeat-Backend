@@ -5,7 +5,7 @@ import entities.Address;
 import entities.UserPreferences;
 
 public record MyAccountResponse(String firstName, String lastName,
-                                String email, String departmentName,
+                                String email, String phoneNumber, String departmentName,
                                 String formatedAdress, String profilePhoto,
                                 boolean quietPlace, boolean nearWindow,
                                 String preferedColleague)
@@ -16,6 +16,7 @@ public record MyAccountResponse(String firstName, String lastName,
                 user.getFirstName(),
                 user.getLastName(),
                 user.getEmail(),
+                user.getPhoneNumber(),
                 user.getDepartment() == null ? null : user.getDepartment().getName(),
                 formatAddress(user.getAddress()),
                 user.getProfilePhoto(),

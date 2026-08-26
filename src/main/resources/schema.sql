@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS USERS(
                                     email VARCHAR(255) NOT NULL UNIQUE,
                                     department_id INT REFERENCES DEPARTMENT(id),
                                     role VARCHAR(255),
-                                    phone_number VARCHAR(10) UNIQUE,
+                                    phone_number VARCHAR(16) UNIQUE,
                                     address_id INT REFERENCES ADDRESS(id),
                                     profile_photo VARCHAR(255),
                                     employment_date DATE,
