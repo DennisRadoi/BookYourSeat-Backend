@@ -109,7 +109,7 @@ public class AuthService {
         user.setRole("ROLE_USER");
         user.setIsActive(true);
 
-        user.setProfilePhoto("default.png");
+        user.setProfilePhoto(null);
 
         user.setEmploymentDate(LocalDate.now());
 
