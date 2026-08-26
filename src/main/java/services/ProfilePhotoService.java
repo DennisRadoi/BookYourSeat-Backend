@@ -1,5 +1,7 @@
 package services;
 
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
 import exceptions.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -9,10 +11,8 @@ import repositories.UserRepository;
 import entities.User;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.UUID;
+import java.util.Map;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -20,15 +20,13 @@ public class ProfilePhotoService {
 
     private final UserRepository userRepository;
     private final SseService sseService;
-
-    @Value("${app.upload.profile-photos-dir:uploads/profile-photos}")
-    private String profilePhotosDir;
+    private final Cloudinary cloudinary;
 
     @Value("${app.upload.max-file-size:5242880}") // 5MB default
     private long maxFileSize;
 
-    @Value("${app.upload.profile-photo-url-prefix:/api/uploads/profile-photos}")
-    private String profilePhotoUrlPrefix;
+    @Value("${cloudinary.cloud-name:}")
+    private String cloudName;
 
     public String uploadProfilePhoto(Integer userId, MultipartFile file) throws IOException {
         if (file.isEmpty()) {
@@ -46,26 +44,31 @@ public class ProfilePhotoService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User", userId));
 
-        // Delete old photo if exists
-        if (user.getProfilePhoto() != null && !user.getProfilePhoto().isEmpty()) {
-            deleteProfilePhotoFile(user.getProfilePhoto());
+        if (cloudName.isBlank()) {
+            throw new IllegalStateException("Cloudinary nu este configurat. Adaugă CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY și CLOUDINARY_API_SECRET.");
         }
 
-        // Generate unique filename
-        String filename = generateUniqueFilename(file.getOriginalFilename());
-        String photoPath = savePhotoFile(file, filename);
+        Map<?, ?> uploadResult = cloudinary.uploader().upload(file.getBytes(), ObjectUtils.asMap(
+                "public_id", "bys/profile-photos/user-" + userId,
+                "overwrite", true,
+                "invalidate", true,
+                "resource_type", "image"
+        ));
+        String photoUrl = String.valueOf(uploadResult.get("secure_url"));
+        if (photoUrl == null || photoUrl.isBlank() || "null".equals(photoUrl)) {
+            throw new IOException("Cloudinary nu a returnat URL-ul pozei.");
+        }
 
-        // Update user entity
-        user.setProfilePhoto(photoPath);
+        user.setProfilePhoto(photoUrl);
         userRepository.save(user);
 
         // Notify SSE listeners about the change
         try {
-            sseService.broadcastUserUpdated(userId, photoPath);
+            sseService.broadcastUserUpdated(userId, photoUrl);
         } catch (Exception ignored) {
         }
 
-        return photoPath;
+        return photoUrl;
     }
 
     public void deleteProfilePhoto(Integer userId) {
@@ -73,8 +76,15 @@ public class ProfilePhotoService {
                 .orElseThrow(() -> new ResourceNotFoundException("User", userId));
 
         if (user.getProfilePhoto() != null && !user.getProfilePhoto().isEmpty()) {
-            String old = user.getProfilePhoto();
-            deleteProfilePhotoFile(old);
+            if (!cloudName.isBlank()) {
+                try {
+                    cloudinary.uploader().destroy("bys/profile-photos/user-" + userId,
+                            ObjectUtils.asMap("invalidate", true));
+                } catch (IOException ignored) {
+                    // Ștergerea locală a referinței din DB rămâne posibilă dacă
+                    // fișierul a fost deja eliminat din Cloudinary.
+                }
+            }
             user.setProfilePhoto(null);
             userRepository.save(user);
 
@@ -87,50 +97,7 @@ public class ProfilePhotoService {
 
     private boolean isValidImageFile(MultipartFile file) {
         String contentType = file.getContentType();
-        return contentType != null && contentType.startsWith("image/");
+        return Set.of("image/jpeg", "image/png", "image/webp").contains(contentType);
     }
 
-    private String generateUniqueFilename(String originalFilename) {
-        if (originalFilename == null) {
-            originalFilename = "image.jpg";
-        }
-        String extension = getFileExtension(originalFilename);
-        return UUID.randomUUID() + "." + extension;
-    }
-
-    private String getFileExtension(String filename) {
-        if (filename != null && filename.contains(".")) {
-            return filename.substring(filename.lastIndexOf(".") + 1).toLowerCase();
-        }
-        return "jpg";
-    }
-
-    private String savePhotoFile(MultipartFile file, String filename) throws IOException {
-        Path uploadDir = Paths.get(profilePhotosDir).toAbsolutePath().normalize();
-        Files.createDirectories(uploadDir);
-
-        Path filePath = uploadDir.resolve(filename);
-        Files.write(filePath, file.getBytes());
-
-        return filename;
-    }
-
-    private void deleteProfilePhotoFile(String filename) {
-        try {
-            Path filePath = Paths.get(profilePhotosDir).resolve(filename).toAbsolutePath().normalize();
-            if (Files.exists(filePath)) {
-                Files.delete(filePath);
-            }
-        } catch (IOException e) {
-            // Log error but don't throw - deletion failure shouldn't block user operations
-            System.err.println("Eroare la ștergerea fișierului de profil: " + e.getMessage());
-        }
-    }
-
-    public String getProfilePhotoUrl(String filename) {
-        if (filename == null || filename.isEmpty()) {
-            return null;
-        }
-        return profilePhotoUrlPrefix + "/" + filename;
-    }
 }
