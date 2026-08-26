@@ -148,9 +148,7 @@ public class UserController {
         try {
             Integer currentUserId = userService.getCurrentUser().getId();
             String photoPath = profilePhotoService.uploadProfilePhoto(currentUserId, file);
-            // Return the URL (or path) that can be used to fetch the uploaded photo
-            String photoUrl = profilePhotoService.getProfilePhotoUrl(photoPath);
-            return ResponseEntity.ok(photoUrl);
+            return ResponseEntity.ok(photoPath);
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Eroare la salvarea fișierului: " + e.getMessage());
