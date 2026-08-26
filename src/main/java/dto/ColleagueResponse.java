@@ -3,7 +3,7 @@ package dto;
 import entities.User;
 
 public record ColleagueResponse(Integer id, String fullname, String role,
-                                String status, String location, String building, String room, boolean isFavorite) {
+                                String status, String location, String building, String room, boolean isFavorite, String profilePhoto) {
 
     public static ColleagueResponse fromEntity(User user, String status, String location, String building,
                                                boolean isFavorite) {
@@ -20,7 +20,8 @@ public record ColleagueResponse(Integer id, String fullname, String role,
                 location,
                 building,
                 room,
-                isFavorite
+                isFavorite,
+                user.getProfilePhoto()
         );
     }
 }
