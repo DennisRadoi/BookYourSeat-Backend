@@ -2,15 +2,22 @@ package controllers;
 
 import dto.*;
 import entities.User;
+import exceptions.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import jakarta.validation.Valid;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.http.MediaType;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import services.FavoriteColleagueService;
 import services.UserService;
+import services.ProfilePhotoService;
+import services.SseService;
 
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -19,6 +26,8 @@ import java.util.List;
 public class UserController {
     private final UserService userService;
     private final FavoriteColleagueService favoriteColleagueService;
+    private final ProfilePhotoService profilePhotoService;
+    private final SseService sseService;
 
     @GetMapping
     public PageResponse<ColleagueResponse> getColleagues(
@@ -130,5 +139,39 @@ public class UserController {
         Integer currentUserId = userService.getCurrentUser().getId();
         userService.changePassword(request, currentUserId);
         return ResponseEntity.ok().body("Password has been modified.");
+    }
+
+    @PostMapping("/me/profile-photo")
+    public ResponseEntity<String> uploadProfilePhoto(
+            @RequestParam("file") MultipartFile file
+    ) {
+        try {
+            Integer currentUserId = userService.getCurrentUser().getId();
+            String photoPath = profilePhotoService.uploadProfilePhoto(currentUserId, file);
+            return ResponseEntity.ok(photoPath);
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Eroare la salvarea fișierului: " + e.getMessage());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/me/profile-photo")
+    public ResponseEntity<String> deleteProfilePhoto() {
+        try {
+            Integer currentUserId = userService.getCurrentUser().getId();
+            profilePhotoService.deleteProfilePhoto(currentUserId);
+            return ResponseEntity.ok("Poza de profil a fost ștearsă cu succes.");
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Utilizatorul nu a fost găsit.");
+        }
+    }
+
+    @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public SseEmitter streamUsers() {
+        return sseService.register();
     }
 }
